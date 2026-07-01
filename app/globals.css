@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* ---------- Дизайн-токены SEVIMLI (Tailwind v4) ---------- */
+@theme {
+  --color-primary: #c4507a;
+  --color-primary-dark: #a03b61;
+  --color-primary-light: #fbeaf0;
+  --color-secondary: #1d9e75;
+  --color-secondary-light: #e1f5ee;
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #2a2a2a;
+}
+
+/* Шрифты подключаются через next/font в app/layout.tsx */
+@theme inline {
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-inter);
+}
+
+/* ---------- База ---------- */
+body {
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  color: var(--color-ink);
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Скрыть скроллбар у горизонтальных лент */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Мягкое появление секций */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease both;
+}
+
+/* ---------- Переиспользуемые компонентные классы ---------- */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3
+      font-medium text-white transition-colors hover:bg-primary-dark
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300
+      bg-white px-6 py-3 font-medium text-neutral-800 transition-colors
+      hover:border-primary hover:text-primary;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2
+      font-medium text-neutral-700 transition-colors hover:bg-neutral-100;
+  }
+  .input {
+    @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-neutral-900
+      outline-none transition-colors placeholder:text-neutral-400
+      focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+  .card {
+    @apply rounded-2xl border border-neutral-200 bg-white transition-shadow hover:shadow-lg;
+  }
+  .section-title {
+    @apply font-display text-2xl font-bold text-neutral-900 sm:text-3xl;
+  }
+}
