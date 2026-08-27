@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { BadgeCheck, MapPin, AtSign, CalendarPlus } from 'lucide-react'
 import type { Shop, Product, Review } from '@/lib/types'
-import { categoryEmoji, CATEGORY_LABEL } from '@/lib/categories'
+import { categoryEmoji, categoryLabel } from '@/lib/categories'
+import { shopDesc } from '@/lib/product-i18n'
+import { useLang } from '@/components/LangProvider'
 import { cn } from '@/lib/utils'
 import Thumb from '@/components/ui/Thumb'
 import StarRating from '@/components/ui/StarRating'
@@ -22,14 +24,15 @@ export default function ShopView({
   products: Product[]
   reviews: Review[]
 }) {
+  const { lang, t } = useLang()
   const [tab, setTab] = useState<Tab>('products')
   const [bookingOpen, setBookingOpen] = useState(false)
   const isSalon = shop.category_slug === 'salons'
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'products', label: isSalon ? 'Услуги' : 'Товары' },
-    { id: 'reviews', label: `Отзывы (${reviews.length})` },
-    { id: 'about', label: 'О магазине' },
+    { id: 'products', label: isSalon ? t.shopPage.services : t.shopPage.products },
+    { id: 'reviews', label: `${t.shopPage.reviews} (${reviews.length})` },
+    { id: 'about', label: t.shopPage.about },
   ]
 
   return (
@@ -44,9 +47,7 @@ export default function ShopView({
             <h1 className="font-display text-3xl font-bold text-neutral-900">{shop.name}</h1>
             {shop.is_verified && <BadgeCheck size={22} className="text-secondary" />}
           </div>
-          <p className="mt-1 text-sm text-neutral-400">
-            {shop.category_slug ? CATEGORY_LABEL[shop.category_slug] : 'Магазин'}
-          </p>
+          <p className="mt-1 text-sm text-neutral-400">{categoryLabel(shop.category_slug, lang)}</p>
           <div className="mt-3 flex flex-wrap items-center gap-4">
             <StarRating value={shop.rating} count={shop.reviews_count} />
             <span className="flex items-center gap-1 text-sm text-neutral-500">
@@ -54,7 +55,8 @@ export default function ShopView({
             </span>
             {shop.instagram && (
               <a
-                href={`https://instagram.com/${shop.instagram}`}
+                // Хендл нормализуем: пользовательское значение не должно ломать URL
+                href={`https://instagram.com/${shop.instagram.replace(/^@/, '').replace(/[^A-Za-z0-9._].*$/, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-sm text-primary hover:underline"
@@ -66,7 +68,7 @@ export default function ShopView({
         </div>
         {isSalon && (
           <button onClick={() => setBookingOpen(true)} className="btn-primary shrink-0">
-            <CalendarPlus size={18} /> Записаться
+            <CalendarPlus size={18} /> {t.shopPage.book}
           </button>
         )}
       </div>
@@ -92,7 +94,7 @@ export default function ShopView({
       <div className="mt-6">
         {tab === 'products' &&
           (products.length === 0 ? (
-            <Empty text="Пока нет товаров" />
+            <Empty text={t.shopPage.noProducts} />
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => (
@@ -103,7 +105,7 @@ export default function ShopView({
 
         {tab === 'reviews' &&
           (reviews.length === 0 ? (
-            <Empty text="Пока нет отзывов" />
+            <Empty text={t.shopPage.noReviews} />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {reviews.map((r) => (
@@ -114,10 +116,10 @@ export default function ShopView({
 
         {tab === 'about' && (
           <div className="max-w-2xl space-y-3 text-neutral-700">
-            <p>{shop.description || 'Продавец пока не добавил описание.'}</p>
+            <p>{shopDesc(shop, lang) || t.shopPage.noDescription}</p>
             {shop.phone && (
               <p className="text-sm text-neutral-500">
-                Телефон: <span className="text-neutral-800">{shop.phone}</span>
+                {t.shopPage.phone} <span className="text-neutral-800">{shop.phone}</span>
               </p>
             )}
           </div>

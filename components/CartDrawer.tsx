@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import { useCart, selectTotalPrice } from '@/store/cart'
-import { formatPrice } from '@/lib/format'
+import { formatPriceLang } from '@/lib/format'
 import { categoryEmoji } from '@/lib/categories'
+import { productName } from '@/lib/product-i18n'
+import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
 import { cn } from '@/lib/utils'
 
 export default function CartDrawer() {
+  const { lang, t } = useLang()
   const { items, isOpen, close, updateQuantity, removeItem } = useCart()
   const total = useCart(selectTotalPrice)
 
@@ -31,7 +34,7 @@ export default function CartDrawer() {
         )}
       >
         <header className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h2 className="font-display text-xl font-bold">Корзина</h2>
+          <h2 className="font-display text-xl font-bold">{t.cart.drawerTitle}</h2>
           <button onClick={close} className="rounded-full p-2 hover:bg-neutral-100" aria-label="Закрыть">
             <X size={22} />
           </button>
@@ -40,9 +43,9 @@ export default function CartDrawer() {
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-neutral-500">
             <ShoppingBag size={48} className="text-neutral-300" />
-            <p>Корзина пуста</p>
+            <p>{t.cart.empty}</p>
             <button onClick={close} className="btn-outline mt-2">
-              За покупками
+              {t.cart.goShopping}
             </button>
           </div>
         ) : (
@@ -59,10 +62,10 @@ export default function CartDrawer() {
                       onClick={close}
                       className="line-clamp-2 text-sm font-medium hover:text-primary"
                     >
-                      {product.name}
+                      {productName(product, lang)}
                     </Link>
                     <span className="mt-0.5 text-sm font-semibold text-primary">
-                      {formatPrice(product.price)}
+                      {formatPriceLang(product.price, lang)}
                     </span>
                     <div className="mt-auto flex items-center gap-2">
                       <div className="flex items-center rounded-full border border-neutral-300">
@@ -97,11 +100,11 @@ export default function CartDrawer() {
 
             <footer className="border-t border-neutral-200 p-5">
               <div className="mb-4 flex items-center justify-between text-lg">
-                <span className="text-neutral-600">Итого</span>
-                <span className="font-display font-bold">{formatPrice(total)}</span>
+                <span className="text-neutral-600">{t.cart.total}</span>
+                <span className="font-display font-bold">{formatPriceLang(total, lang)}</span>
               </div>
               <Link href="/cart" onClick={close} className="btn-primary w-full">
-                Оформить заказ
+                {t.cart.submit}
               </Link>
             </footer>
           </>

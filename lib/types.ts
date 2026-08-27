@@ -52,6 +52,14 @@ export interface Product {
   stock: number
   is_active: boolean
   created_at: string
+  /** Бренд (для косметики: COSRX, Anua…). Опционально. */
+  brand?: string | null
+  /** Страна происхождения (напр. «Корея»). Опционально. */
+  country?: string | null
+  /** Гарантия оригинала/официальный импорт. Опционально. */
+  is_original?: boolean
+  /** Цена официальных ритейлеров (для показа «дешевле оригинала»). */
+  market_price?: number | null
   /** Подгружается через join при выборке. */
   shop?: Shop | null
 }
@@ -97,4 +105,68 @@ export interface Booking {
   phone: string | null
   created_at: string
   shop?: Shop | null
+}
+
+// ---------- Сообщество (встроенная соц-медиа) ----------
+
+export type PostKind = 'review' | 'question' | 'tip'
+
+export interface PostComment {
+  id: string
+  post_id: string
+  author_name: string
+  text: string
+  created_at: string
+}
+
+export interface CommunityPost {
+  id: string
+  author_name: string
+  author_city: string | null
+  /** Аватар автора (путь к фото). Нет — рисуем букву. */
+  author_avatar?: string | null
+  kind: PostKind
+  text: string
+  images: string[]
+  /** Хэштеги/темы (напр. «уход», «корея», «отзыв»). */
+  tags: string[]
+  /** Привязка к товару — воронка «сообщество → покупка». */
+  product_id: string | null
+  likes: number
+  created_at: string
+  comments: PostComment[]
+  product?: Product | null
+}
+
+// ---------- Вопросы о товаре (Q&A) ----------
+
+export interface ProductAnswer {
+  id: string
+  question_id: string
+  author_name: string
+  /** Ответ от магазина/эксперта — выделяется бейджем. */
+  is_seller: boolean
+  text: string
+  created_at: string
+}
+
+export interface ProductQuestion {
+  id: string
+  product_id: string
+  author_name: string
+  text: string
+  created_at: string
+  answers: ProductAnswer[]
+}
+
+// ---------- Лояльность ----------
+
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+
+export interface LoyaltyEntry {
+  id: string
+  /** Положительное — начисление, отрицательное — списание. */
+  points: number
+  reason: string
+  created_at: string
 }

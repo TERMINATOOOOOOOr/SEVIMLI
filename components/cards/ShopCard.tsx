@@ -1,11 +1,21 @@
+'use client'
+
 import Link from 'next/link'
 import { BadgeCheck, MapPin } from 'lucide-react'
 import type { Shop } from '@/lib/types'
-import { CATEGORY_LABEL, categoryEmoji } from '@/lib/categories'
+import { categoryEmoji, categoryLabel } from '@/lib/categories'
+import { useLang } from '@/components/LangProvider'
 import StarRating from '@/components/ui/StarRating'
 import Thumb from '@/components/ui/Thumb'
 
+const CITY_UZ: Record<string, string> = {
+  Ташкент: 'Toshkent',
+  Самарканд: 'Samarqand',
+  Бухара: 'Buxoro',
+}
+
 export default function ShopCard({ shop }: { shop: Shop }) {
+  const { lang } = useLang()
   return (
     <Link
       href={`/shop/${shop.id}`}
@@ -19,14 +29,12 @@ export default function ShopCard({ shop }: { shop: Shop }) {
           <h3 className="truncate font-semibold text-neutral-900">{shop.name}</h3>
           {shop.is_verified && <BadgeCheck size={16} className="shrink-0 text-secondary" />}
         </div>
-        <p className="mt-0.5 text-xs text-neutral-400">
-          {shop.category_slug ? CATEGORY_LABEL[shop.category_slug] : 'Магазин'}
-        </p>
+        <p className="mt-0.5 text-xs text-neutral-400">{categoryLabel(shop.category_slug, lang)}</p>
         <div className="mt-2 flex items-center justify-between">
           <StarRating value={shop.rating} count={shop.reviews_count} size={14} />
           <span className="flex items-center gap-1 text-xs text-neutral-500">
             <MapPin size={12} />
-            {shop.city}
+            {lang === 'uz' ? (CITY_UZ[shop.city] ?? shop.city) : shop.city}
           </span>
         </div>
       </div>

@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingCart, CalendarClock, Store } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, CalendarClock, Store, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
   { href: '/seller/dashboard', label: 'Дашборд', icon: LayoutDashboard },
+  { href: '/seller/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/seller/products', label: 'Мои товары', icon: Package },
   { href: '/seller/orders', label: 'Заказы', icon: ShoppingCart },
   { href: '/seller/bookings', label: 'Записи', icon: CalendarClock },

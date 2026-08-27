@@ -1,0 +1,36 @@
+{
+  "name": "SEVIMLI — ayollar uchun marketpleys",
+  "short_name": "SEVIMLI",
+  "description": "Hamjamiyat, do'kon va xizmatlar bir joyda. Сообщество, магазины и услуги для женщин Узбекистана.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#c4507a",
+  "lang": "uz",
+  "categories": ["shopping", "lifestyle", "social"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "K-beauty",
+      "url": "/korean",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Hamjamiyat",
+      "url": "/community",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sevilya AI",
+      "url": "/assistant",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

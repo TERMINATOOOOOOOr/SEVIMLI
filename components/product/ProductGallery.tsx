@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Thumb from '@/components/ui/Thumb'
+import Tilt3D from '@/components/ui/Tilt3D'
 import { cn } from '@/lib/utils'
 
 interface ProductGalleryProps {
@@ -16,9 +17,11 @@ export default function ProductGallery({ images, emoji, name }: ProductGalleryPr
 
   return (
     <div>
-      <div className="aspect-square overflow-hidden rounded-2xl border border-neutral-200">
-        <Thumb src={hasImages ? images[active] : null} emoji={emoji} alt={name} />
-      </div>
+      <Tilt3D max={6} glare>
+        <div className="aspect-square overflow-hidden rounded-2xl border border-neutral-200">
+          <Thumb src={hasImages ? images[active] : null} emoji={emoji} alt={name} />
+        </div>
+      </Tilt3D>
 
       {images.length > 1 && (
         <div className="mt-3 flex gap-3">

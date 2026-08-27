@@ -3,25 +3,48 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
-import { LogOut, Store, Package, CalendarClock, Settings, ShoppingBag } from 'lucide-react'
+import {
+  LogOut,
+  Store,
+  Package,
+  CalendarClock,
+  Settings,
+  ShoppingBag,
+  Gift,
+  ChevronRight,
+} from 'lucide-react'
 import type { Profile, Order, Booking } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
-import { formatPrice, formatDate } from '@/lib/format'
-import { ORDER_STATUS_LABEL, ORDER_STATUS_STYLE } from '@/lib/orders'
+import { orderPickupCode, effectiveStatus } from '@/lib/courier'
+import { useCourier } from '@/store/courier'
+import { useSession } from '@/store/session'
+import { useLoyalty } from '@/store/loyalty'
+import { useHasMounted } from '@/lib/hooks'
+import { formatPriceLang, formatDateLang, formatPointsLang } from '@/lib/format'
+import { orderStatusLabel, ORDER_STATUS_STYLE } from '@/lib/orders'
+import { useLang } from '@/components/LangProvider'
 import { cn } from '@/lib/utils'
+import LoyaltyCard from '@/components/loyalty/LoyaltyCard'
 
-type Tab = 'orders' | 'bookings' | 'settings'
+type Tab = 'orders' | 'bookings' | 'loyalty' | 'settings'
 
 interface Props {
   profile: Profile
   email: string
   orders: Order[]
   bookings: Booking[]
+  /** true — демо-режим без базы: действия идут в локальную сессию, а не в Supabase. */
+  demo?: boolean
 }
 
-export default function ProfileView({ profile, email, orders, bookings }: Props) {
+export default function ProfileView({ profile, email, orders, bookings, demo = false }: Props) {
   const router = useRouter()
-  const supabase = createClient()
+  const mounted = useHasMounted()
+  const { lang, t: tr } = useLang()
+  const demoLogout = useSession((s) => s.logout)
+  const demoBecomeSeller = useSession((s) => s.becomeSeller)
+  const demoUpdateProfile = useSession((s) => s.updateProfile)
+  const points = useLoyalty((s) => s.points)
 
   const [tab, setTab] = useState<Tab>('orders')
   const [name, setName] = useState(profile.name ?? '')
@@ -31,8 +54,14 @@ export default function ProfileView({ profile, email, orders, bookings }: Props)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
   const [becoming, setBecoming] = useState(false)
 
+  // ВАЖНО: клиент Supabase создаём только внутри обработчиков и только
+  // вне демо-режима — создание при рендере роняло страницу на проде.
   async function signOut() {
-    await supabase.auth.signOut()
+    if (demo) {
+      demoLogout()
+    } else {
+      await createClient().auth.signOut()
+    }
     router.push('/')
     router.refresh()
   }
@@ -41,97 +70,168 @@ export default function ProfileView({ profile, email, orders, bookings }: Props)
     e.preventDefault()
     setSaving(true)
     setSavedMsg(null)
-    await supabase.from('profiles').update({ name, phone, city }).eq('id', profile.id)
+    if (demo) {
+      demoUpdateProfile({ name, phone, city })
+    } else {
+      await createClient().from('profiles').update({ name, phone, city }).eq('id', profile.id)
+    }
     setSaving(false)
-    setSavedMsg('Сохранено')
+    setSavedMsg(tr.profile.saved)
     router.refresh()
   }
 
   async function becomeSeller() {
     setBecoming(true)
-    await supabase.from('profiles').update({ role: 'seller' }).eq('id', profile.id)
+    if (demo) {
+      demoBecomeSeller()
+    } else {
+      await createClient().from('profiles').update({ role: 'seller' }).eq('id', profile.id)
+    }
     router.push('/seller/dashboard')
     router.refresh()
   }
 
   const tabs: { id: Tab; label: string; icon: typeof Package }[] = [
-    { id: 'orders', label: 'Мои заказы', icon: Package },
-    { id: 'bookings', label: 'Мои записи', icon: CalendarClock },
-    { id: 'settings', label: 'Настройки', icon: Settings },
+    { id: 'orders', label: tr.profile.myOrders, icon: Package },
+    { id: 'bookings', label: tr.profile.myBookings, icon: CalendarClock },
+    { id: 'loyalty', label: tr.profile.loyaltyCard, icon: Gift },
+    { id: 'settings', label: tr.profile.settings, icon: Settings },
+  ]
+
+  const stats = [
+    { value: orders.length, label: tr.profile.myOrders, icon: Package, go: 'orders' as Tab },
+    { value: bookings.length, label: tr.profile.myBookings, icon: CalendarClock, go: 'bookings' as Tab },
+    {
+      value: mounted ? formatPointsLang(points, lang) : '…',
+      label: tr.loyalty.balance,
+      icon: Gift,
+      go: 'loyalty' as Tab,
+    },
   ]
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      {/* Шапка */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-light text-xl font-bold text-primary">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+      {/* Шапка-карточка */}
+      <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark p-6 text-white shadow-lg sm:p-8">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl font-bold backdrop-blur">
             {(profile.name || email).charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-neutral-900">
-              Привет, {profile.name || 'друг'}!
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-2xl font-bold">
+              {tr.profile.hi} {profile.name || tr.profile.friend}!
             </h1>
-            <p className="text-sm text-neutral-500">{email}</p>
+            <p className="truncate text-sm text-white/80">{email}</p>
           </div>
+          <button
+            onClick={signOut}
+            className="flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-sm font-medium backdrop-blur transition-colors hover:bg-white/25"
+          >
+            <LogOut size={16} /> {tr.profile.signOut}
+          </button>
         </div>
-        <button onClick={signOut} className="btn-ghost text-neutral-600">
-          <LogOut size={18} /> Выйти
-        </button>
+
+        {/* Быстрая статистика */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <button
+              key={s.label}
+              onClick={() => setTab(s.go)}
+              className="rounded-2xl bg-white/12 p-3 text-left backdrop-blur transition-colors hover:bg-white/20"
+            >
+              <s.icon size={18} className="opacity-80" />
+              <p className="mt-1.5 truncate font-display text-lg font-bold">{s.value}</p>
+              <p className="truncate text-xs text-white/75">{s.label}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Продавец */}
-      <div className="mt-6">
+      <div className="mt-5">
         {profile.role === 'seller' || profile.role === 'admin' ? (
-          <Link href="/seller/dashboard" className="btn-primary">
-            <Store size={18} /> Кабинет продавца
+          <Link
+            href="/seller/dashboard"
+            className="flex items-center justify-between rounded-2xl border border-neutral-200 p-4 transition-colors hover:border-primary"
+          >
+            <span className="flex items-center gap-3 font-medium text-neutral-900">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary">
+                <Store size={20} />
+              </span>
+              {tr.profile.sellerCabinet}
+            </span>
+            <ChevronRight size={18} className="text-neutral-400" />
           </Link>
         ) : (
-          <button onClick={becomeSeller} disabled={becoming} className="btn-outline">
-            <Store size={18} /> {becoming ? 'Открываем…' : 'Стать продавцом'}
+          <button
+            onClick={becomeSeller}
+            disabled={becoming}
+            className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 p-4 transition-colors hover:border-primary disabled:opacity-60"
+          >
+            <span className="flex items-center gap-3 font-medium text-neutral-900">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary">
+                <Store size={20} />
+              </span>
+              {becoming ? tr.profile.opening : tr.profile.becomeSeller}
+            </span>
+            <ChevronRight size={18} className="text-neutral-400" />
           </button>
         )}
       </div>
 
       {/* Вкладки */}
-      <div className="mt-8 flex gap-1 border-b border-neutral-200">
-        {tabs.map((t) => (
+      <div className="no-scrollbar mt-6 flex gap-1.5 overflow-x-auto">
+        {tabs.map((tb) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className={cn(
-              'flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors',
-              tab === t.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800',
+              'flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors',
+              tab === tb.id
+                ? 'bg-primary text-white'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
             )}
           >
-            <t.icon size={16} />
-            <span className="hidden sm:inline">{t.label}</span>
+            <tb.icon size={15} />
+            {tb.label}
           </button>
         ))}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-5">
         {tab === 'orders' && <OrdersList orders={orders} />}
         {tab === 'bookings' && <BookingsList bookings={bookings} />}
+        {tab === 'loyalty' && (
+          <div className="max-w-md">
+            <LoyaltyCard />
+            <Link href="/loyalty" className="btn-outline mt-4 w-full !py-2.5 text-sm">
+              {tr.profile.tiersHistory}
+            </Link>
+          </div>
+        )}
         {tab === 'settings' && (
           <form onSubmit={saveSettings} className="max-w-md space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Имя</label>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                {tr.profile.name}
+              </label>
               <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Телефон</label>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                {tr.profile.phone}
+              </label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} className="input" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Город</label>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                {tr.profile.city}
+              </label>
               <input value={city} onChange={(e) => setCity(e.target.value)} className="input" />
             </div>
             <div className="flex items-center gap-3">
               <button type="submit" disabled={saving} className="btn-primary">
-                {saving ? 'Сохраняем…' : 'Сохранить'}
+                {saving ? tr.profile.saving : tr.profile.save}
               </button>
               {savedMsg && <span className="text-sm text-secondary">{savedMsg}</span>}
             </div>
@@ -143,37 +243,68 @@ export default function ProfileView({ profile, email, orders, bookings }: Props)
 }
 
 function OrdersList({ orders }: { orders: Order[] }) {
-  if (orders.length === 0) return <Empty icon={<ShoppingBag size={40} />} text="У вас пока нет заказов" />
+  const { lang, t } = useLang()
+  const overrides = useCourier((s) => s.overrides)
+  if (orders.length === 0)
+    return <Empty icon={<ShoppingBag size={40} />} text={t.profile.noOrders} />
   return (
     <div className="space-y-3">
-      {orders.map((o) => (
-        <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 p-4">
-          <div>
-            <p className="font-medium text-neutral-900">Заказ #{o.id.slice(0, 8)}</p>
-            <p className="text-sm text-neutral-400">{formatDate(o.created_at)}</p>
+      {orders.map((o) => {
+        const eff = effectiveStatus(o, overrides)
+        return (
+          <div key={o.id} className="rounded-2xl border border-neutral-200 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-neutral-900">
+                  {t.profile.order} #{o.id.slice(0, 8)}
+                </p>
+                <p className="text-sm text-neutral-400">{formatDateLang(o.created_at, lang)}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="font-semibold">{formatPriceLang(o.total_price ?? 0, lang)}</span>
+                <span
+                  className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[eff])}
+                >
+                  {orderStatusLabel(eff, lang)}
+                </span>
+              </div>
+            </div>
+
+            {/* Код получения — покупательница называет его курьеру */}
+            {eff === 'delivering' && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-primary-light/60 px-4 py-3">
+                <span className="font-mono text-xl font-bold tracking-[0.3em] text-primary">
+                  {orderPickupCode(o.id)}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-800">{t.profile.pickupCode}</p>
+                  <p className="text-xs text-neutral-500">{t.profile.pickupHint}</p>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-4">
-            <span className="font-semibold">{formatPrice(o.total_price ?? 0)}</span>
-            <span className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[o.status])}>
-              {ORDER_STATUS_LABEL[o.status]}
-            </span>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
 function BookingsList({ bookings }: { bookings: Booking[] }) {
-  if (bookings.length === 0) return <Empty icon={<CalendarClock size={40} />} text="У вас нет записей" />
+  const { lang, t } = useLang()
+  if (bookings.length === 0)
+    return <Empty icon={<CalendarClock size={40} />} text={t.profile.noBookings} />
   return (
     <div className="space-y-3">
       {bookings.map((b) => (
-        <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 p-4">
+        <div
+          key={b.id}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-neutral-200 p-4"
+        >
           <div>
-            <p className="font-medium text-neutral-900">{b.service_name || 'Услуга'}</p>
+            <p className="font-medium text-neutral-900">{b.service_name || t.profile.service}</p>
             <p className="text-sm text-neutral-400">
-              {b.shop?.name} · {b.booking_date ? formatDate(b.booking_date) : ''} {b.time_slot}
+              {b.shop?.name} · {b.booking_date ? formatDateLang(b.booking_date, lang) : ''}{' '}
+              {b.time_slot}
             </p>
           </div>
           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">

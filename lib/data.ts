@@ -1,7 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/utils'
-import { demoCategories, demoShops, demoProducts, demoReviews } from '@/lib/demo'
-import type { Category, Shop, Product, Review } from '@/lib/types'
+import {
+  demoCategories,
+  demoShops,
+  demoProducts,
+  demoReviews,
+  demoPosts,
+  demoOrders,
+  demoBookings,
+} from '@/lib/demo'
+import type { Category, Shop, Product, Review, CommunityPost, Order, Booking } from '@/lib/types'
 
 /**
  * Слой доступа к данным для серверных компонентов.
@@ -85,6 +93,27 @@ export async function getNewProducts(limit = 8): Promise<Product[]> {
     return data as Product[]
   } catch {
     return demoProducts.slice(0, limit)
+  }
+}
+
+/** Корейская косметика с гарантией оригинала — для главной и страницы /korean. */
+export async function getOriginalProducts(limit = 8): Promise<Product[]> {
+  if (!isSupabaseConfigured()) {
+    return demoProducts.filter((p) => p.is_original).slice(0, limit)
+  }
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, shop:shops(*)')
+      .eq('is_original', true)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error || !data?.length) return demoProducts.filter((p) => p.is_original).slice(0, limit)
+    return data as Product[]
+  } catch {
+    return demoProducts.filter((p) => p.is_original).slice(0, limit)
   }
 }
 
@@ -231,6 +260,63 @@ export async function getShopReviews(shopId: string): Promise<Review[]> {
   }
 }
 
+// ---------- Заказы и записи магазина (кабинет продавца) ----------
+
+/** Входящие заказы магазина. */
+export async function getOrdersByShop(shopId: string): Promise<Order[]> {
+  if (!isSupabaseConfigured()) {
+    return demoOrders.filter((o) => o.shop_id === shopId)
+  }
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('shop_id', shopId)
+      .order('created_at', { ascending: false })
+    return (data as Order[]) ?? []
+  } catch {
+    return []
+  }
+}
+
+/** Записи к магазину (салоны). */
+export async function getBookingsByShop(shopId: string): Promise<Booking[]> {
+  if (!isSupabaseConfigured()) {
+    return demoBookings.filter((b) => b.shop_id === shopId)
+  }
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('shop_id', shopId)
+      .order('created_at', { ascending: false })
+    return (data as Booking[]) ?? []
+  } catch {
+    return []
+  }
+}
+
+// ---------- Сообщество ----------
+
+/** Последние посты сообщества (для тизера на главной). */
+export async function getCommunityPosts(limit = 3): Promise<CommunityPost[]> {
+  if (!isSupabaseConfigured()) return demoPosts.slice(0, limit)
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error || !data?.length) return demoPosts.slice(0, limit)
+    return (data as CommunityPost[]).map((p) => ({ ...p, comments: p.comments ?? [] }))
+  } catch {
+    return demoPosts.slice(0, limit)
+  }
+}
+
 // ---------- Поиск ----------
 
 export async function search(q: string): Promise<{ products: Product[]; shops: Shop[] }> {
@@ -250,11 +336,15 @@ export async function search(q: string): Promise<{ products: Product[]; shops: S
 
   try {
     const supabase = await createClient()
+    // В .or() строка собирается вручную, поэтому спецсимволы синтаксиса
+    // PostgREST (, ( ) : % * \) из пользовательского ввода вырезаем —
+    // иначе запросом вида «x),is_active.eq.false,(…» можно менять фильтр.
+    const safe = term.replace(/[,()%*:\\]/g, ' ').trim()
     const [{ data: products }, { data: shops }] = await Promise.all([
       supabase
         .from('products')
         .select('*, shop:shops(*)')
-        .or(`name.ilike.%${term}%,description.ilike.%${term}%`)
+        .or(`name.ilike.%${safe}%,description.ilike.%${safe}%`)
         .eq('is_active', true)
         .limit(24),
       supabase.from('shops').select('*').ilike('name', `%${term}%`).limit(12),

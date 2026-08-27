@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import { CalendarClock } from 'lucide-react'
 import { getSellerContext } from '@/lib/seller'
-import { createClient } from '@/lib/supabase/server'
+import { getBookingsByShop } from '@/lib/data'
 import NoShop from '@/components/seller/NoShop'
 import { formatDate } from '@/lib/format'
-import type { Booking } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'Записи' }
 
@@ -12,13 +11,7 @@ export default async function SellerBookingsPage() {
   const { shop } = await getSellerContext()
   if (!shop) return <NoShop />
 
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('shop_id', shop.id)
-    .order('created_at', { ascending: false })
-  const bookings = (data as Booking[]) ?? []
+  const bookings = await getBookingsByShop(shop.id)
 
   return (
     <div>

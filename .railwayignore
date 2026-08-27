@@ -1,0 +1,10 @@
+# Не отправлять на сборку то, что не нужно рантайму приложения.
+node_modules
+.next
+.git
+.vercel
+.playwright-mcp
+pitch
+__pycache__
+*.log
+ДЛЯ_УЧАСТНИКОВ.md

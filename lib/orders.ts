@@ -8,6 +8,19 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: 'Отменён',
 }
 
+export const ORDER_STATUS_LABEL_UZ: Record<OrderStatus, string> = {
+  pending: 'Tasdiqlashni kutmoqda',
+  confirmed: 'Tasdiqlandi',
+  delivering: 'Yetkazilmoqda',
+  done: 'Bajarildi',
+  cancelled: 'Bekor qilindi',
+}
+
+/** Статус заказа на нужном языке. */
+export function orderStatusLabel(status: OrderStatus, lang: 'ru' | 'uz'): string {
+  return (lang === 'uz' ? ORDER_STATUS_LABEL_UZ : ORDER_STATUS_LABEL)[status]
+}
+
 export const ORDER_STATUS_STYLE: Record<OrderStatus, string> = {
   pending: 'bg-amber-100 text-amber-700',
   confirmed: 'bg-blue-100 text-blue-700',

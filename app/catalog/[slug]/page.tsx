@@ -2,9 +2,13 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PackageOpen } from 'lucide-react'
 import { getCategoryBySlug, getCatalogProducts, type ProductSort } from '@/lib/data'
+import { getT } from '@/lib/lang-server'
+import { categoryName } from '@/lib/i18n'
 import ProductCard from '@/components/cards/ProductCard'
 import FilterSidebar from '@/components/catalog/FilterSidebar'
 import Pagination from '@/components/catalog/Pagination'
+import SoftGlow from '@/components/ui/SoftGlow'
+import WeightlessBg from '@/components/ui/Weightless'
 
 const PAGE_SIZE = 12
 
@@ -39,6 +43,7 @@ export default async function CatalogPage({
 }) {
   const { slug } = await params
   const sp = await searchParams
+  const { lang, t } = await getT()
 
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
@@ -68,13 +73,17 @@ export default async function CatalogPage({
   if (sort && sort !== 'newest') baseParams.sort = sort
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="relative isolate mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <SoftGlow variant="rose" />
+      <WeightlessBg seed={4} />
       <div className="mb-8">
-        <p className="text-sm text-neutral-400">Каталог</p>
+        <p className="text-sm text-neutral-400">{t.catalog.breadcrumb}</p>
         <h1 className="font-display text-3xl font-bold text-neutral-900">
-          {category.icon} {category.name_ru}
+          {category.icon} {categoryName(category, lang)}
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">Найдено товаров: {total}</p>
+        <p className="mt-1 text-sm text-neutral-500">
+          {t.catalog.found} {total}
+        </p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
@@ -84,10 +93,8 @@ export default async function CatalogPage({
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 py-20 text-center">
               <PackageOpen size={48} className="text-neutral-300" />
-              <p className="mt-4 text-lg font-medium text-neutral-700">Товаров не найдено</p>
-              <p className="mt-1 text-sm text-neutral-400">
-                Попробуйте изменить фильтры или загляните позже.
-              </p>
+              <p className="mt-4 text-lg font-medium text-neutral-700">{t.catalog.notFound}</p>
+              <p className="mt-1 text-sm text-neutral-400">{t.catalog.tryChange}</p>
             </div>
           ) : (
             <>

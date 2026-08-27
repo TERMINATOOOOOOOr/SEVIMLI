@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import { Package, ShoppingCart, Wallet, Star } from 'lucide-react'
 import { getSellerContext } from '@/lib/seller'
-import { createClient } from '@/lib/supabase/server'
+import { getOrdersByShop, getProductsByShop } from '@/lib/data'
 import NoShop from '@/components/seller/NoShop'
 import { formatPrice, formatDate } from '@/lib/format'
 import { ORDER_STATUS_LABEL, ORDER_STATUS_STYLE } from '@/lib/orders'
 import { cn } from '@/lib/utils'
-import type { Order } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'Дашборд' }
 
@@ -14,12 +13,11 @@ export default async function DashboardPage() {
   const { shop } = await getSellerContext()
   if (!shop) return <NoShop />
 
-  const supabase = await createClient()
-  const [{ count: productsCount }, { data: ordersData }] = await Promise.all([
-    supabase.from('products').select('id', { count: 'exact', head: true }).eq('shop_id', shop.id),
-    supabase.from('orders').select('*').eq('shop_id', shop.id).order('created_at', { ascending: false }),
+  const [products, orders] = await Promise.all([
+    getProductsByShop(shop.id),
+    getOrdersByShop(shop.id),
   ])
-  const orders = (ordersData as Order[]) ?? []
+  const productsCount = products.length
 
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -40,7 +38,7 @@ export default async function DashboardPage() {
   const maxCount = Math.max(1, ...days.map((d) => d.count))
 
   const stats = [
-    { label: 'Товаров', value: String(productsCount ?? 0), icon: Package },
+    { label: 'Товаров', value: String(productsCount), icon: Package },
     { label: 'Заказов за месяц', value: String(ordersThisMonth), icon: ShoppingCart },
     { label: 'Выручка', value: formatPrice(revenue), icon: Wallet },
     { label: 'Рейтинг', value: shop.rating.toFixed(1), icon: Star },

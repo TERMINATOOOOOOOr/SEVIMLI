@@ -3,12 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/utils'
 import AuthRequired from '@/components/auth/AuthRequired'
 import ProfileView from '@/components/profile/ProfileView'
+import DemoProfile from '@/components/profile/DemoProfile'
 import type { Profile, Order, Booking } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'Профиль' }
 
 export default async function ProfilePage() {
-  if (!isSupabaseConfigured()) return <AuthRequired demo />
+  // Демо-режим: профиль строится из локальной сессии (без базы).
+  if (!isSupabaseConfigured()) return <DemoProfile />
 
   const supabase = await createClient()
   const {
