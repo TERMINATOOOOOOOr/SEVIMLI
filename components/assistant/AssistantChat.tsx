@@ -190,6 +190,8 @@ export default function AssistantChat({ products }: { products: Product[] }) {
   const initedFor = useRef<string | null>(null)
   /** Зеркало convos для чтения в эффектах без циклов по зависимостям. */
   const convosRef = useRef<Conversation<Message>[]>([])
+  /** Активный запрос к живому ассистенту — чтобы прервать при новом сообщении/смене чата. */
+  const abortRef = useRef<AbortController | null>(null)
   const DEFAULT_TITLE = t.assistant.newChat
 
   useEffect(() => {
@@ -200,6 +202,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
   function clearPending() {
     timerIds.current.forEach(clearTimeout)
     timerIds.current.length = 0
+    abortRef.current?.abort()
     setTyping(false)
   }
 
@@ -343,6 +346,74 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     }
   }
 
+  /** Оффлайн-ответ по правилам — запасной путь, если живой Claude недоступен. */
+  function offlineReply(text: string) {
+    const parsed = parseFreeText(text)
+    if (parsed.skin || parsed.concern) {
+      const nextSkin = parsed.skin ?? skin
+      const nextConcern = parsed.concern ?? lastConcern
+      if (nextConcern) {
+        showResult(nextSkin ?? 'normal', nextConcern)
+      } else {
+        setSkin(nextSkin ?? 'normal')
+        botSay({ text: t.assistant.askConcern, chips: concernChips })
+      }
+      return
+    }
+    const faq = answerFaq(text, lang)
+    if (faq) {
+      botSay({ text: faq })
+      return
+    }
+    botSay({ text: t.assistant.fallback, chips: skin ? concernChips : skinChips })
+  }
+
+  /** Живой ответ Севили (Claude, стриминг). При лимите/ошибке — откат на offlineReply. */
+  async function askClaude(text: string) {
+    const convo = [
+      ...messages
+        .filter((m) => m.text)
+        .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text as string })),
+      { role: 'user', content: text },
+    ]
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
+    setTyping(true)
+    let botId: number | null = null
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: convo, lang }),
+        signal: ctrl.signal,
+      })
+      if (!res.ok || !res.body) throw new Error('status ' + res.status)
+      setTyping(false)
+      botId = nextId++
+      const id = botId
+      setMessages((m) => [...m, { id, role: 'bot', text: '' }])
+      const reader = res.body.getReader()
+      const dec = new TextDecoder()
+      let acc = ''
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (done) break
+        acc += dec.decode(value, { stream: true })
+        setMessages((m) => m.map((x) => (x.id === id ? { ...x, text: acc } : x)))
+      }
+      if (!acc.trim()) throw new Error('empty')
+    } catch {
+      if (botId !== null) {
+        const dead = botId
+        setMessages((m) => m.filter((x) => x.id !== dead || (x.text ?? '').trim()))
+      }
+      setTyping(false)
+      if (!ctrl.signal.aborted) offlineReply(text)
+    } finally {
+      if (abortRef.current === ctrl) abortRef.current = null
+    }
+  }
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     const text = input.trim()
@@ -350,32 +421,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     clearPending()
     setInput('')
     userSay(text)
-
-    const parsed = parseFreeText(text)
-
-    // 1) Продолжение подбора: упомянут тип кожи и/или задача (в т.ч. «а если жирная?»).
-    if (parsed.skin || parsed.concern) {
-      const nextSkin = parsed.skin ?? skin
-      const nextConcern = parsed.concern ?? lastConcern
-      if (nextConcern) {
-        showResult(nextSkin ?? 'normal', nextConcern)
-      } else {
-        // Есть только тип кожи, задачи ещё не было — уточняем.
-        setSkin(nextSkin ?? 'normal')
-        botSay({ text: t.assistant.askConcern, chips: concernChips })
-      }
-      return
-    }
-
-    // 2) Вопрос о площадке (доставка, оригинал, Davra, лояльность…).
-    const faq = answerFaq(text, lang)
-    if (faq) {
-      botSay({ text: faq })
-      return
-    }
-
-    // 3) Не распознали — помогаем сориентироваться.
-    botSay({ text: t.assistant.fallback, chips: skin ? concernChips : skinChips })
+    askClaude(text)
   }
 
   function onAdd(p: Product) {
