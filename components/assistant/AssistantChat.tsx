@@ -2,7 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Send, ShoppingBag, RotateCcw, Sparkles, CalendarDays, Sun, Moon } from 'lucide-react'
+import {
+  Send,
+  ShoppingBag,
+  RotateCcw,
+  Sparkles,
+  CalendarDays,
+  Sun,
+  Moon,
+  Plus,
+  Trash2,
+  MessageSquare,
+  X,
+  PanelLeft,
+} from 'lucide-react'
 import type { Product } from '@/lib/types'
 import {
   SKIN_OPTIONS,
@@ -21,6 +34,8 @@ import { useCart } from '@/store/cart'
 import { useLang } from '@/components/LangProvider'
 import { cn } from '@/lib/utils'
 import Thumb from '@/components/ui/Thumb'
+import { useSession } from '@/store/session'
+import { loadChats, saveChats, type Conversation } from '@/lib/assistant-storage'
 
 interface Chip {
   id: string
@@ -37,6 +52,26 @@ interface Message {
 }
 
 let nextId = 1
+
+/** Уникальный id диалога (браузерный рантайм). */
+function newConvId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  } catch {
+    /* fallthrough */
+  }
+  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
+const nowMs = () => Date.now()
+
+/** Автозаголовок диалога из первого сообщения пользователя. */
+function titleFromMessages(msgs: Message[], fallback: string): string {
+  const firstUser = msgs.find((m) => m.role === 'user' && m.text)
+  const text = firstUser?.text?.trim()
+  if (!text) return fallback
+  return text.length > 30 ? text.slice(0, 30) + '…' : text
+}
 
 /** Карточка «когда что наносить»: утро/вечер по шагам + активы по дням недели. */
 function PlanCard({ plan }: { plan: RoutinePlan }) {
@@ -134,13 +169,29 @@ function PlanCard({ plan }: { plan: RoutinePlan }) {
 export default function AssistantChat({ products }: { products: Product[] }) {
   const { lang, t } = useLang()
   const addItem = useCart((s) => s.addItem)
+  const user = useSession((s) => s.user)
+  const email = user?.email ?? null
+  const loggedIn = !!user
   const [messages, setMessages] = useState<Message[]>([])
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
   const [skin, setSkin] = useState<SkinType | null>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
+  /** Список диалогов и активный — только для залогиненных (Phase 2). */
+  const [convos, setConvos] = useState<Conversation<Message>[]>([])
+  const [activeId, setActiveId] = useState<string>('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const timerIds = useRef<ReturnType<typeof setTimeout>[]>([])
+  /** Для кого уже инициализировали ленту: 'guest' | `u:<email>`. */
+  const initedFor = useRef<string | null>(null)
+  /** Зеркало convos для чтения в эффектах без циклов по зависимостям. */
+  const convosRef = useRef<Conversation<Message>[]>([])
+  const DEFAULT_TITLE = t.assistant.newChat
+
+  useEffect(() => {
+    convosRef.current = convos
+  }, [convos])
 
   /** Отменяем отложенные ответы прошлого запроса, чтобы они не вклинились в новый. */
   function clearPending() {
@@ -177,13 +228,75 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     )
   }
 
-  // Приветствие
+  /** Свежее приветственное сообщение. */
+  function freshGreeting(): Message {
+    return { id: nextId++, role: 'bot', text: t.assistant.greeting, chips: skinChips }
+  }
+
+  // Инициализация по пользователю: залогинен → грузим список диалогов (или создаём первый),
+  // гость → один эфемерный чат (ничего не сохраняем). Срабатывает и при входе/выходе.
   useEffect(() => {
-    if (messages.length === 0) {
-      botSay({ text: t.assistant.greeting, chips: skinChips }, 400)
+    const marker = loggedIn ? `u:${email}` : 'guest'
+    if (initedFor.current === marker) return
+    initedFor.current = marker
+    clearPending()
+    setSkin(null)
+
+    if (loggedIn) {
+      const store = loadChats<Message>(email)
+      if (store && store.list.length > 0) {
+        const active = store.list.find((c) => c.id === store.activeId) ?? store.list[0]
+        const maxId = store.list.reduce(
+          (mx, c) => Math.max(mx, c.messages.reduce((m, x) => Math.max(m, x?.id ?? 0), 0)),
+          0,
+        )
+        if (nextId <= maxId) nextId = maxId + 1
+        setConvos(store.list)
+        setActiveId(active.id)
+        setMessages(active.messages)
+        return
+      }
+      // Нет сохранёнки → первый диалог с приветствием.
+      const greeting = freshGreeting()
+      const conv: Conversation<Message> = {
+        id: newConvId(),
+        title: DEFAULT_TITLE,
+        messages: [greeting],
+        updatedAt: nowMs(),
+      }
+      setConvos([conv])
+      setActiveId(conv.id)
+      setMessages([greeting])
+      return
     }
+
+    // Гость — эфемерный одиночный чат.
+    setConvos([])
+    setActiveId('')
+    setMessages([freshGreeting()])
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [loggedIn, email])
+
+  // Автосохранение: пишем текущую ленту в активный диалог и в localStorage (только залогинен).
+  useEffect(() => {
+    if (!loggedIn || initedFor.current !== `u:${email}` || !activeId) return
+    const next = convosRef.current.map((c) =>
+      c.id === activeId
+        ? {
+            ...c,
+            messages,
+            updatedAt: nowMs(),
+            title:
+              c.title && c.title !== DEFAULT_TITLE
+                ? c.title
+                : titleFromMessages(messages, DEFAULT_TITLE),
+          }
+        : c,
+    )
+    setConvos(next)
+    saveChats(email, { list: next, activeId })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, activeId, loggedIn, email])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -247,8 +360,197 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     setTimeout(() => setAddedId(null), 1500)
   }
 
+  /** Гость: сброс единственного эфемерного чата. */
+  function resetGuestChat() {
+    clearPending()
+    setSkin(null)
+    setAddedId(null)
+    setMessages([freshGreeting()])
+  }
+
+  /** Залогинен: создать новый диалог (прежние сохраняются в списке). */
+  function newConversation() {
+    clearPending()
+    setSkin(null)
+    setAddedId(null)
+    const greeting = freshGreeting()
+    const conv: Conversation<Message> = {
+      id: newConvId(),
+      title: DEFAULT_TITLE,
+      messages: [greeting],
+      updatedAt: nowMs(),
+    }
+    const next = [conv, ...convosRef.current]
+    setConvos(next)
+    setActiveId(conv.id)
+    setMessages([greeting])
+    saveChats(email, { list: next, activeId: conv.id })
+    setSidebarOpen(false)
+  }
+
+  /** Кнопка «Новый чат» в шапке. */
+  function startNewChat() {
+    if (loggedIn) newConversation()
+    else resetGuestChat()
+  }
+
+  /** Переключиться на другой диалог. */
+  function switchConversation(id: string) {
+    setSidebarOpen(false)
+    if (id === activeId) return
+    const conv = convosRef.current.find((c) => c.id === id)
+    if (!conv) return
+    clearPending()
+    setSkin(null)
+    setAddedId(null)
+    const maxId = conv.messages.reduce((m, x) => Math.max(m, x?.id ?? 0), 0)
+    if (nextId <= maxId) nextId = maxId + 1
+    setActiveId(id)
+    setMessages(conv.messages)
+    saveChats(email, { list: convosRef.current, activeId: id })
+  }
+
+  /** Удалить диалог из истории. */
+  function deleteConversation(id: string, e?: React.MouseEvent) {
+    e?.stopPropagation()
+    const remaining = convosRef.current.filter((c) => c.id !== id)
+    if (remaining.length === 0) {
+      clearPending()
+      setSkin(null)
+      const greeting = freshGreeting()
+      const conv: Conversation<Message> = {
+        id: newConvId(),
+        title: DEFAULT_TITLE,
+        messages: [greeting],
+        updatedAt: nowMs(),
+      }
+      setConvos([conv])
+      setActiveId(conv.id)
+      setMessages([greeting])
+      saveChats(email, { list: [conv], activeId: conv.id })
+      return
+    }
+    setConvos(remaining)
+    if (id === activeId) {
+      const nextActive = remaining[0]
+      clearPending()
+      setSkin(null)
+      const maxId = nextActive.messages.reduce((m, x) => Math.max(m, x?.id ?? 0), 0)
+      if (nextId <= maxId) nextId = maxId + 1
+      setActiveId(nextActive.id)
+      setMessages(nextActive.messages)
+      saveChats(email, { list: remaining, activeId: nextActive.id })
+    } else {
+      saveChats(email, { list: remaining, activeId })
+    }
+  }
+
+  /** Отображаемый заголовок диалога (с фолбэком). */
+  function convTitle(c: Conversation<Message>): string {
+    return c.title && c.title.trim() ? c.title : titleFromMessages(c.messages, DEFAULT_TITLE)
+  }
+
+  /** Диалоги, отсортированные по свежести. */
+  const sortedConvos = [...convos].sort((a, b) => b.updatedAt - a.updatedAt)
+
+  /** Внутренность панели истории (переиспользуется на десктопе и в мобильном drawer). */
+  const listInner = (
+    <>
+      <button
+        type="button"
+        onClick={newConversation}
+        className="flex w-full items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-primary hover:text-primary"
+      >
+        <Plus size={15} /> {t.assistant.newChat}
+      </button>
+      <div className="mt-1.5 flex-1 space-y-0.5 overflow-y-auto">
+        {sortedConvos.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => switchConversation(c.id)}
+            className={cn(
+              'group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
+              c.id === activeId
+                ? 'bg-primary-light/60 font-medium text-primary'
+                : 'text-neutral-600 hover:bg-neutral-100',
+            )}
+          >
+            <MessageSquare size={14} className="shrink-0 opacity-70" />
+            <span className="min-w-0 flex-1 truncate">{convTitle(c)}</span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => deleteConversation(c.id, e)}
+              className="shrink-0 rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+              aria-label="Удалить диалог"
+            >
+              <Trash2 size={13} />
+            </span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+
   return (
-    <div className="flex h-[68dvh] min-h-[440px] flex-col rounded-3xl border border-neutral-200 bg-white shadow-sm">
+    <div className="relative flex h-[68dvh] min-h-[440px] overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
+      {/* Панель истории (десктоп) — только для залогиненных */}
+      {loggedIn && (
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-neutral-100 p-2 md:flex">
+          {listInner}
+        </aside>
+      )}
+
+      {/* Панель истории (мобильный drawer) */}
+      {loggedIn && sidebarOpen && (
+        <div className="absolute inset-0 z-30 md:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r border-neutral-100 bg-white p-2 shadow-xl">
+            <div className="mb-1 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded p-1 text-neutral-400 hover:text-neutral-700"
+                aria-label="Закрыть"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            {listInner}
+          </aside>
+        </div>
+      )}
+
+      {/* Основная колонка: шапка + лента + ввод */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Шапка: имя + управление историей */}
+        <div className="flex items-center justify-between gap-2 border-b border-neutral-100 px-4 py-2.5">
+          <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-neutral-800">
+            {loggedIn && (
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="mr-0.5 rounded-md p-1 text-neutral-500 hover:bg-neutral-100 md:hidden"
+                aria-label="История"
+              >
+                <PanelLeft size={16} />
+              </button>
+            )}
+            <Sparkles size={15} className="shrink-0 text-primary" /> {t.assistant.name}
+            <span className="truncate text-xs font-normal text-neutral-400">
+              · {loggedIn ? t.assistant.historyHint : t.assistant.guestHint}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="flex shrink-0 items-center gap-1 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary hover:text-primary"
+          >
+            <Plus size={13} /> {t.assistant.newChat}
+          </button>
+        </div>
+
       {/* Лента сообщений */}
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
         {messages.map((m) => (
@@ -358,7 +660,8 @@ export default function AssistantChat({ products }: { products: Product[] }) {
         <button type="submit" className="btn-primary shrink-0 !px-4" aria-label="Send">
           <Send size={16} />
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

@@ -481,6 +481,9 @@ const ru = {
     fabLabel: 'Подбор ухода',
     disclaimer:
       'Демо-версия: рекомендации построены на правилах косметолога и каталоге SEVIMLI. Не является медицинской консультацией.',
+    newChat: 'Новый чат',
+    historyHint: 'история сохраняется',
+    guestHint: 'войдите — и история сохранится',
   },
   insights: {
     priceTitle: 'История цены',
@@ -974,6 +977,9 @@ const uz: Dict = {
     fabLabel: 'Parvarish tanlash',
     disclaimer:
       "Demo-versiya: tavsiyalar kosmetolog qoidalari va SEVIMLI katalogi asosida. Tibbiy maslahat emas.",
+    newChat: 'Yangi suhbat',
+    historyHint: 'tarix saqlanadi',
+    guestHint: 'kiring — tarix saqlanadi',
   },
   insights: {
     priceTitle: 'Narx tarixi',
