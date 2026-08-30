@@ -22,6 +22,7 @@ import {
   CONCERN_OPTIONS,
   recommend,
   parseFreeText,
+  answerFaq,
   buildRoutine,
   type SkinType,
   type Concern,
@@ -176,6 +177,8 @@ export default function AssistantChat({ products }: { products: Product[] }) {
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
   const [skin, setSkin] = useState<SkinType | null>(null)
+  /** Последняя выбранная задача — чтобы отвечать на «а если жирная?» без повторного вопроса. */
+  const [lastConcern, setLastConcern] = useState<Concern | null>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
   /** Список диалогов и активный — только для залогиненных (Phase 2). */
   const [convos, setConvos] = useState<Conversation<Message>[]>([])
@@ -307,6 +310,8 @@ export default function AssistantChat({ products }: { products: Product[] }) {
   }
 
   function showResult(s: SkinType, c: Concern) {
+    setSkin(s)
+    setLastConcern(c)
     const recs = recommend(s, c)
     const plan = buildRoutine(recs)
     botSay({ text: t.assistant.resultIntro, recs })
@@ -345,13 +350,32 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     clearPending()
     setInput('')
     userSay(text)
+
     const parsed = parseFreeText(text)
-    if (parsed.skin) setSkin(parsed.skin)
-    if (parsed.concern) {
-      showResult(parsed.skin ?? skin ?? 'normal', parsed.concern)
-    } else {
-      botSay({ text: t.assistant.fallback, chips: skin ? concernChips : skinChips })
+
+    // 1) Продолжение подбора: упомянут тип кожи и/или задача (в т.ч. «а если жирная?»).
+    if (parsed.skin || parsed.concern) {
+      const nextSkin = parsed.skin ?? skin
+      const nextConcern = parsed.concern ?? lastConcern
+      if (nextConcern) {
+        showResult(nextSkin ?? 'normal', nextConcern)
+      } else {
+        // Есть только тип кожи, задачи ещё не было — уточняем.
+        setSkin(nextSkin ?? 'normal')
+        botSay({ text: t.assistant.askConcern, chips: concernChips })
+      }
+      return
     }
+
+    // 2) Вопрос о площадке (доставка, оригинал, Davra, лояльность…).
+    const faq = answerFaq(text, lang)
+    if (faq) {
+      botSay({ text: faq })
+      return
+    }
+
+    // 3) Не распознали — помогаем сориентироваться.
+    botSay({ text: t.assistant.fallback, chips: skin ? concernChips : skinChips })
   }
 
   function onAdd(p: Product) {

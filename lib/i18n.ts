@@ -465,7 +465,7 @@ const ru = {
     restart: 'Подобрать заново',
     added: 'Добавлено!',
     fallback:
-      'Я лучше всего разбираюсь в уходе за кожей 🙈 Напишите, какая у вас кожа и что беспокоит («сухая, тусклый цвет лица») — или выберите вариант ниже.',
+      'Могу подобрать уход или ответить о площадке — доставка, оригинал, Davra, лояльность, оплата. Напишите вопрос или выберите тип кожи ниже 👇',
     typing: 'печатает…',
     planIntro: 'И собрала для вас график — когда и что наносить:',
     planTitle: 'Ваш график ухода',
@@ -961,7 +961,7 @@ const uz: Dict = {
     restart: 'Qayta tanlash',
     added: "Qo'shildi!",
     fallback:
-      "Men asosan teri parvarishi bo'yicha yordam bera olaman 🙈 Teringiz qandayligini va nima bezovta qilayotganini yozing («quruq, rang xira») — yoki quyidan tanlang.",
+      "Parvarish tanlab beraman yoki platforma haqida javob beraman — yetkazish, original, Davra, sodiqlik, toʻlov. Savolingizni yozing yoki quyidan teri turini tanlang 👇",
     typing: 'yozmoqda…',
     planIntro: "Siz uchun jadval ham tuzdim — qachon va nima surtish kerak:",
     planTitle: 'Parvarish jadvalingiz',

@@ -205,9 +205,129 @@ const SKIN_KEYWORDS: { skin: SkinType; words: RegExp }[] = [
   { skin: 'combo', words: /комбинир|aralash/i },
 ]
 
-/** Разбор свободного вопроса: находим тип кожи и задачу, если упомянуты. */
+/** Отрицание перед найденным словом: «не сухая», «emas» — тогда слово не в счёт. */
+function isNegatedAt(text: string, idx: number): boolean {
+  const before = text.slice(Math.max(0, idx - 7), idx).toLowerCase()
+  return /(^|\s)(не|нет|emas)\s*$/.test(before)
+}
+
+/** Разбор свободного вопроса: тип кожи и задача (с учётом отрицаний). */
 export function parseFreeText(text: string): { skin: SkinType | null; concern: Concern | null } {
-  const concern = KEYWORDS.find((k) => k.words.test(text))?.concern ?? null
-  const skin = SKIN_KEYWORDS.find((k) => k.words.test(text))?.skin ?? null
+  let concern: Concern | null = null
+  for (const k of KEYWORDS) {
+    const m = text.match(k.words)
+    if (m && !isNegatedAt(text, m.index ?? 0)) {
+      concern = k.concern
+      break
+    }
+  }
+  let skin: SkinType | null = null
+  for (const k of SKIN_KEYWORDS) {
+    const m = text.match(k.words)
+    if (m && !isNegatedAt(text, m.index ?? 0)) {
+      skin = k.skin
+      break
+    }
+  }
   return { skin, concern }
+}
+
+// ---------- База ответов по площадке (FAQ) ----------
+
+/** Интент вопроса о SEVIMLI → готовый ответ (демо: правила, без LLM). */
+const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[] = [
+  {
+    id: 'delivery',
+    words: /доставк|привез|когда получ|сколько.*(идёт|идет|дней|ждать)|yetkaz|dostavka/i,
+    answer: {
+      ru: '🚚 Доставка: у большинства магазинов бесплатная по Ташкенту, обычно за 1 день. По регионам — быстрая отправка; точный срок и стоимость видно в корзине перед оплатой.',
+      uz: '🚚 Yetkazish: aksariyat doʻkonlarda Toshkent boʻylab bepul, odatda 1 kun ichida. Viloyatlarga tez joʻnatma; aniq muddat va narx savatchada koʻrinadi.',
+    },
+  },
+  {
+    id: 'authentic',
+    words: /оригинал|подлин|подделк|фейк|настоящ|asl|orijinal|soxta|haqiqiy/i,
+    answer: {
+      ru: '🛡️ Подлинность: товары с меткой «100% оригинал» приходят с защитной наклейкой и уникальным кодом. Код проверяется на странице «Проверка подлинности» — увидите поставку и срок годности. За подделку продавца отключают навсегда.',
+      uz: '🛡️ Haqiqiylik: «100% original» belgili mahsulotlar himoya stikeri va noyob kod bilan keladi. Kod «Haqiqiylikni tekshirish» sahifasida tekshiriladi. Soxta mahsulot uchun sotuvchi butunlay oʻchiriladi.',
+    },
+  },
+  {
+    id: 'davra',
+    words: /davra|давра|вскладчин|группов|круг подруг|birga/i,
+    answer: {
+      ru: '👛 Davra — групповые покупки: создаёте круг, зовёте подруг по ссылке, складываете товары в общую корзину. При сумме от 500 000 сум — скидка −10% каждой и одна доставка на всех. Каждая платит свою часть сама.',
+      uz: '👛 Davra — birgalikda xarid: doira yaratasiz, dugonalarni havola orqali chaqirasiz, mahsulotlarni umumiy savatga qoʻshasiz. 500 000 soʻmdan oshsa — har biriga −10% chegirma va bitta yetkazish.',
+    },
+  },
+  {
+    id: 'loyalty',
+    words: /балл|кешб[эе]к|кешбек|лояльн|бонус|уровн|cashback|sodiqlik/i,
+    answer: {
+      ru: '💎 Лояльность: копите баллы с каждой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. Кешбэк баллами растёт с 1% до 5%, баллами можно оплачивать до 50% заказа.',
+      uz: '💎 Sodiqlik: har xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Keshbek 1% dan 5% gacha, ballar bilan buyurtmaning 50% gacha toʻlash mumkin.',
+    },
+  },
+  {
+    id: 'pay',
+    words: /оплат|оплачив|картой|click|payme|uzcard|humo|наличн|to.?lov/i,
+    answer: {
+      ru: '💳 Оплата: картами Uzcard/Humo и через Click/Payme, а также баллами лояльности (до 50% заказа). Это демо — платёжные провайдеры подключаются на проде.',
+      uz: '💳 Toʻlov: Uzcard/Humo va Click/Payme orqali, shuningdek sodiqlik ballari bilan (50% gacha). Bu demo — toʻlov provayderlari prod versiyada ulanadi.',
+    },
+  },
+  {
+    id: 'return',
+    words: /возврат|обмен|вернуть|не подош|брак|qaytar|almashtir/i,
+    answer: {
+      ru: '↩️ Возврат и обмен: если товар не подошёл или с браком — оформляете возврат через магазин, деньги возвращаются на карту или баллами. Спорные случаи площадка решает на стороне покупателя.',
+      uz: '↩️ Qaytarish: mahsulot mos kelmasa yoki nuqsonli boʻlsa — doʻkon orqali qaytarasiz, pul kartaga yoki ballarga qaytadi. Nizoni platforma xaridor foydasiga hal qiladi.',
+    },
+  },
+  {
+    id: 'howorder',
+    words: /как\s+(заказ|купить|офор|добав)|корзин|оформ.*заказ|qanday.*(xarid|buyurtma|sotib)/i,
+    answer: {
+      ru: '🛒 Как заказать: открываете товар → «В корзину» → в корзине проверяете и оформляете заказ. Можно добавить прямо из моего совета или из отзыва в сообществе. Для покупок вскладчину — «в корзину круга» Davra.',
+      uz: '🛒 Buyurtma: mahsulotni ochasiz → «Savatga» → savatda tekshirib buyurtma berasiz. Mening tavsiyamdan yoki sharhdan ham qoʻshsa boʻladi. Birga xarid uchun — Davra doirasi savatiga.',
+    },
+  },
+  {
+    id: 'kbeauty',
+    words: /k-?beauty|корейск|корея|koreys|koreya/i,
+    answer: {
+      ru: '🇰🇷 K-beauty: магазины с официальным импортом из Кореи — тот же оригинал, что в бутиках, но дешевле, потому что продавцы конкурируют прямо на площадке. Подделки исключены проверкой подлинности.',
+      uz: '🇰🇷 K-beauty: Koreyadan rasmiy import qiluvchi doʻkonlar — butiklardagidek original, lekin arzonroq, chunki sotuvchilar platformada raqobatlashadi.',
+    },
+  },
+  {
+    id: 'salon',
+    words: /салон|запис|маникюр|массаж|бров|макияж|укладк|salon|massaj|manikyur/i,
+    answer: {
+      ru: '💆 Салоны: в разделе «Салоны» выбираете услугу (маникюр, макияж, массаж, укладка) у проверенного салона и записываетесь онлайн — как обычный товар, через корзину.',
+      uz: '💆 Salonlar: «Salonlar» boʻlimida ishonchli salondan xizmat (manikyur, makiyaj, massaj) tanlab, onlayn yozilasiz — oddiy mahsulotdek savat orqali.',
+    },
+  },
+  {
+    id: 'trust',
+    words: /проверенн|надёжн|надежн|безопас|можно.*доверя|обман|ishonch|xavfsiz/i,
+    answer: {
+      ru: '✅ Доверие: на площадке только проверенные магазины, метку «оригинал» дают после подтверждения официального импорта документами. В основе — честные отзывы реальных девушек, а не реклама.',
+      uz: '✅ Ishonch: platformada faqat tekshirilgan doʻkonlar, «original» belgisi hujjatlar bilan tasdiqlangach beriladi. Asosida — reklama emas, haqiqiy sharhlar.',
+    },
+  },
+  {
+    id: 'about',
+    words: /что\s+так(ое|ой)\s+sevimli|что\s+за\s+sevimli|кто\s+ты|что\s+(ты\s+)?умеешь|чем\s+помож|sevimli\s+nima|nima\s+qila/i,
+    answer: {
+      ru: '💗 Я Севиля — помощница SEVIMLI. SEVIMLI это «всё в одном» для женщин Узбекистана: проверенные магазины и оригинальная косметика, живое сообщество с отзывами, групповые покупки Davra, запись в салоны и лояльность. Помогаю подобрать уход и отвечаю на вопросы о площадке.',
+      uz: '💗 Men Sevilyaman — SEVIMLI yordamchisi. SEVIMLI — ayollar uchun «hammasi birda»: tekshirilgan doʻkonlar va original kosmetika, sharhli hamjamiyat, Davra xaridlari, salonlarga yozilish va sodiqlik. Parvarish tanlashda yordam beraman.',
+    },
+  },
+]
+
+/** Ответ по площадке на свободный вопрос, если распознан интент. */
+export function answerFaq(text: string, lang: Lang): string | null {
+  const hit = FAQ_INTENTS.find((i) => i.words.test(text))
+  return hit ? hit.answer[lang] : null
 }
