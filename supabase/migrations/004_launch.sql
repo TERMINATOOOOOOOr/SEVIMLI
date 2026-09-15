@@ -101,6 +101,7 @@ alter table public.shops add column if not exists plan_until          timestampt
 alter table public.shops add column if not exists featured_until      timestamptz;
 alter table public.shops add column if not exists davra_enabled       boolean default false;
 alter table public.shops add column if not exists is_original_verified boolean default false;
+alter table public.shops add column if not exists is_demo             boolean not null default false;
 
 create or replace function public.protect_shop_columns()
 returns trigger
@@ -671,6 +672,69 @@ update public.categories
    set name_ru = 'Здоровье и гигиена', name_uz = 'Salomatlik va gigiyena', icon = '🧴'
  where slug = 'pharmacy';
 
--- ---------- 10. Кабинет продавца: заказ вместе с позициями и контактами ----------
+-- ---------- 10. Сид демо-каталога (только service_role; удаляется одной командой) ----------
+
+create or replace function public.seed_demo(p_shops jsonb, p_products jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  s record;
+  p record;
+  v_map jsonb := '{}'::jsonb;
+  v_id uuid;
+  v_shops int := 0;
+  v_products int := 0;
+begin
+  perform set_config('sevimli.bypass', '1', true);
+  for s in select * from jsonb_to_recordset(p_shops) as x(
+    key text, name text, description text, category_slug text, logo_url text, city text,
+    is_verified boolean, rating numeric, reviews_count int)
+  loop
+    insert into public.shops (owner_id, name, description, category_slug, logo_url, city,
+                              is_verified, rating, reviews_count, is_demo)
+    values (null, s.name, s.description, s.category_slug, s.logo_url, coalesce(s.city, 'Ташкент'),
+            coalesce(s.is_verified, false), coalesce(s.rating, 0), coalesce(s.reviews_count, 0), true)
+    returning id into v_id;
+    v_map := v_map || jsonb_build_object(s.key, v_id);
+    v_shops := v_shops + 1;
+  end loop;
+  for p in select * from jsonb_to_recordset(p_products) as x(
+    shop_key text, name text, description text, price numeric, old_price numeric, images text[],
+    category_slug text, stock int, is_active boolean, brand text, country text, is_original boolean, market_price numeric)
+  loop
+    if v_map ? p.shop_key then
+      insert into public.products (shop_id, name, description, price, old_price, images, category_slug, stock,
+                                   is_active, brand, country, is_original, market_price)
+      values ((v_map ->> p.shop_key)::uuid, p.name, p.description, p.price, p.old_price, coalesce(p.images, '{}'),
+              p.category_slug, coalesce(p.stock, 0), coalesce(p.is_active, true), p.brand, p.country,
+              coalesce(p.is_original, false), p.market_price);
+      v_products := v_products + 1;
+    end if;
+  end loop;
+  return jsonb_build_object('shops', v_shops, 'products', v_products, 'map', v_map);
+end;
+$$;
+revoke execute on function public.seed_demo(jsonb, jsonb) from public, anon, authenticated;
+
+create or replace function public.clear_demo()
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare n int;
+begin
+  perform set_config('sevimli.bypass', '1', true);
+  delete from public.shops where is_demo;
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+revoke execute on function public.clear_demo() from public, anon, authenticated;
+
+-- ---------- 11. Кабинет продавца: заказ вместе с позициями и контактами ----------
 -- (RLS orders_read/order_items_read уже дают продавцу доступ к своим заказам;
 --  в приложении select('*, items:order_items(*, product:products(*))').)

@@ -13,6 +13,8 @@ import OriginalBadge from '@/components/ui/OriginalBadge'
 import Tilt3D from '@/components/ui/Tilt3D'
 
 const NEW_DAYS = 14
+/** Момент загрузки модуля: «новинка» считается от него, а не от каждого рендера. */
+const NOW = Date.now()
 
 export default function ProductCard({ product }: { product: Product }) {
   const addItem = useCart((s) => s.addItem)
@@ -20,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const discount = discountPercent(product.price, product.old_price)
   const marketSaving = discountPercent(product.price, product.market_price)
   const isNew =
-    !discount && Date.now() - new Date(product.created_at).getTime() < NEW_DAYS * 86400000
+    !discount && NOW - new Date(product.created_at).getTime() < NEW_DAYS * 86400000
   const name = productName(product, lang)
 
   return (

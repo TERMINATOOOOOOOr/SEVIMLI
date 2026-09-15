@@ -44,3 +44,6 @@ next-env.d.ts
 # Next.js auto-generated agent rules
 AGENTS.md
 CLAUDE.md
+
+# Supabase CLI cache
+supabase/.temp/

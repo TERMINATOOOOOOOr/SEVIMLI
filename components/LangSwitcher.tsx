@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { LANG_COOKIE, type Lang } from '@/lib/i18n'
+import type { Lang } from '@/lib/i18n'
+import { setLangCookie } from '@/lib/lang-client'
 import { useLang } from '@/components/LangProvider'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +17,7 @@ export default function LangSwitcher({ className }: { className?: string }) {
 
   function switchTo(next: Lang) {
     if (next === lang) return
-    document.cookie = `${LANG_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
+    setLangCookie(next)
     router.refresh()
   }
 

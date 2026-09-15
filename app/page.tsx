@@ -5,6 +5,7 @@ import KoreanBeauty from '@/components/home/KoreanBeauty'
 import CommunityCTA from '@/components/home/CommunityCTA'
 import FeaturedShops from '@/components/home/FeaturedShops'
 import NewProducts from '@/components/home/NewProducts'
+import Waitlist from '@/components/home/Waitlist'
 import { CategoriesSkeleton, ProductsSkeleton } from '@/components/ui/Skeletons'
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
       <Suspense fallback={<ProductsSkeleton count={3} />}>
         <CommunityCTA />
       </Suspense>
+      <Waitlist />
       <Suspense fallback={<ProductsSkeleton count={6} />}>
         <FeaturedShops />
       </Suspense>

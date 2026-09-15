@@ -257,6 +257,8 @@ export default function AssistantChat({ products }: { products: Product[] }) {
           0,
         )
         if (nextId <= maxId) nextId = maxId + 1
+        // Восстановление сохранённых диалогов из localStorage — осознанный setState в эффекте
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConvos(store.list)
         setActiveId(active.id)
         setMessages(active.messages)

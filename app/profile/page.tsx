@@ -21,7 +21,11 @@ export default async function ProfilePage() {
 
   const [{ data: profile }, { data: orders }, { data: bookings }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
-    supabase.from('orders').select('*').eq('buyer_id', user.id).order('created_at', { ascending: false }),
+    supabase
+      .from('orders')
+      .select('*, items:order_items(*, product:products(*))')
+      .eq('buyer_id', user.id)
+      .order('created_at', { ascending: false }),
     supabase
       .from('bookings')
       .select('*, shop:shops(*)')

@@ -13,10 +13,14 @@ import type { Category, Shop, Product, Review, CommunityPost, Order, Booking } f
 
 /**
  * Слой доступа к данным для серверных компонентов.
- * Если Supabase настроен — читаем из базы; иначе (заглушки) — из демо-данных.
- * Любая ошибка запроса тоже приводит к фолбэку на демо/пустые данные,
- * чтобы страница всегда рендерилась.
+ * Демо-данные используются ТОЛЬКО пока Supabase не настроен (заглушки в .env).
+ * В боевом режиме ошибка запроса или пустая таблица дают пустой результат —
+ * страница рендерится, но ничего не выдумывает и не подменяет реальные данные демо.
  */
+
+const PRODUCT_WITH_SHOP = '*, shop:shops(*)'
+const ORDER_WITH_ITEMS = '*, items:order_items(*, product:products(*))'
+const REVIEW_WITH_AUTHOR = '*, author:public_profiles(*)'
 
 export type ProductSort = 'newest' | 'price_asc' | 'price_desc'
 
@@ -36,6 +40,7 @@ export async function getCategories(): Promise<Category[]> {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase.from('categories').select('*').order('sort_order')
+    // Категории сидятся миграцией; если их нет — показываем справочник, он не «данные»
     if (error || !data?.length) return demoCategories
     return data as Category[]
   } catch {
@@ -51,18 +56,22 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 // ---------- Магазины ----------
 
 export async function getFeaturedShops(limit = 6): Promise<Shop[]> {
-  if (!isSupabaseConfigured()) return [...demoShops].sort((a, b) => b.rating - a.rating).slice(0, limit)
+  if (!isSupabaseConfigured()) {
+    return [...demoShops].sort((a, b) => b.rating - a.rating).slice(0, limit)
+  }
   try {
     const supabase = await createClient()
+    // Сначала оплаченные featured-места, затем по рейтингу
     const { data, error } = await supabase
       .from('shops')
       .select('*')
+      .order('featured_until', { ascending: false, nullsFirst: false })
       .order('rating', { ascending: false })
       .limit(limit)
-    if (error || !data?.length) return demoShops.slice(0, limit)
-    return data as Shop[]
+    if (error) return []
+    return (data as Shop[]) ?? []
   } catch {
-    return demoShops.slice(0, limit)
+    return []
   }
 }
 
@@ -70,10 +79,10 @@ export async function getShopById(id: string): Promise<Shop | null> {
   if (!isSupabaseConfigured()) return demoShops.find((s) => s.id === id) ?? null
   try {
     const supabase = await createClient()
-    const { data } = await supabase.from('shops').select('*').eq('id', id).single()
+    const { data } = await supabase.from('shops').select('*').eq('id', id).maybeSingle()
     return (data as Shop) ?? null
   } catch {
-    return demoShops.find((s) => s.id === id) ?? null
+    return null
   }
 }
 
@@ -85,18 +94,18 @@ export async function getNewProducts(limit = 8): Promise<Product[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('products')
-      .select('*, shop:shops(*)')
+      .select(PRODUCT_WITH_SHOP)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(limit)
-    if (error || !data?.length) return demoProducts.slice(0, limit)
-    return data as Product[]
+    if (error) return []
+    return (data as Product[]) ?? []
   } catch {
-    return demoProducts.slice(0, limit)
+    return []
   }
 }
 
-/** Корейская косметика с гарантией оригинала — для главной и страницы /korean. */
+/** Корейская косметика с подтверждённым оригиналом — для главной и страницы /korean. */
 export async function getOriginalProducts(limit = 8): Promise<Product[]> {
   if (!isSupabaseConfigured()) {
     return demoProducts.filter((p) => p.is_original).slice(0, limit)
@@ -105,15 +114,15 @@ export async function getOriginalProducts(limit = 8): Promise<Product[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('products')
-      .select('*, shop:shops(*)')
+      .select(PRODUCT_WITH_SHOP)
       .eq('is_original', true)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(limit)
-    if (error || !data?.length) return demoProducts.filter((p) => p.is_original).slice(0, limit)
-    return data as Product[]
+    if (error) return []
+    return (data as Product[]) ?? []
   } catch {
-    return demoProducts.filter((p) => p.is_original).slice(0, limit)
+    return []
   }
 }
 
@@ -121,10 +130,10 @@ export async function getProductById(id: string): Promise<Product | null> {
   if (!isSupabaseConfigured()) return demoProducts.find((p) => p.id === id) ?? null
   try {
     const supabase = await createClient()
-    const { data } = await supabase.from('products').select('*, shop:shops(*)').eq('id', id).single()
+    const { data } = await supabase.from('products').select(PRODUCT_WITH_SHOP).eq('id', id).maybeSingle()
     return (data as Product) ?? null
   } catch {
-    return demoProducts.find((p) => p.id === id) ?? null
+    return null
   }
 }
 
@@ -133,18 +142,23 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
   return all.filter((p) => p.id !== product.id).slice(0, limit)
 }
 
-export async function getProductsByShop(shopId: string): Promise<Product[]> {
-  if (!isSupabaseConfigured()) return demoProducts.filter((p) => p.shop_id === shopId)
+/** Товары магазина. Для публичной витрины — только активные; продавец в кабинете видит все свои. */
+export async function getProductsByShop(shopId: string, includeInactive = false): Promise<Product[]> {
+  if (!isSupabaseConfigured()) {
+    return demoProducts.filter((p) => p.shop_id === shopId && (includeInactive || p.is_active))
+  }
   try {
     const supabase = await createClient()
-    const { data } = await supabase
+    let query = supabase
       .from('products')
-      .select('*, shop:shops(*)')
+      .select(PRODUCT_WITH_SHOP)
       .eq('shop_id', shopId)
       .order('created_at', { ascending: false })
+    if (!includeInactive) query = query.eq('is_active', true)
+    const { data } = await query
     return (data as Product[]) ?? []
   } catch {
-    return demoProducts.filter((p) => p.shop_id === shopId)
+    return []
   }
 }
 
@@ -155,12 +169,12 @@ async function getProductsByCategoryRaw(slug: string | null): Promise<Product[]>
     const supabase = await createClient()
     const { data } = await supabase
       .from('products')
-      .select('*, shop:shops(*)')
+      .select(PRODUCT_WITH_SHOP)
       .eq('category_slug', slug)
       .eq('is_active', true)
     return (data as Product[]) ?? []
   } catch {
-    return demoProducts.filter((p) => p.category_slug === slug)
+    return []
   }
 }
 
@@ -170,26 +184,28 @@ export async function getCatalogProducts(
   filters: CatalogFilters = {},
 ): Promise<{ items: Product[]; total: number }> {
   const { minPrice, maxPrice, city, sort = 'newest', page = 1, pageSize = 12 } = filters
+  const safePage = Math.max(1, Math.floor(page) || 1)
 
-  // Демо-режим или ошибка — фильтруем в памяти.
-  const inMemory = async () => {
+  const paginate = (items: Product[]) => {
+    const total = items.length
+    const start = (safePage - 1) * pageSize
+    return { items: items.slice(start, start + pageSize), total }
+  }
+
+  // Демо-режим — фильтруем в памяти.
+  if (!isSupabaseConfigured()) {
     let items = await getProductsByCategoryRaw(slug)
     if (minPrice != null) items = items.filter((p) => p.price >= minPrice)
     if (maxPrice != null) items = items.filter((p) => p.price <= maxPrice)
     if (city) items = items.filter((p) => p.shop?.city === city)
-    items = sortProducts(items, sort)
-    const total = items.length
-    const start = (page - 1) * pageSize
-    return { items: items.slice(start, start + pageSize), total }
+    return paginate(sortProducts(items, sort))
   }
-
-  if (!isSupabaseConfigured()) return inMemory()
 
   try {
     const supabase = await createClient()
     let query = supabase
       .from('products')
-      .select('*, shop:shops(*)', { count: 'exact' })
+      .select(PRODUCT_WITH_SHOP, { count: 'exact' })
       .eq('category_slug', slug)
       .eq('is_active', true)
 
@@ -200,17 +216,22 @@ export async function getCatalogProducts(
     else if (sort === 'price_desc') query = query.order('price', { ascending: false })
     else query = query.order('created_at', { ascending: false })
 
-    const from = (page - 1) * pageSize
-    query = query.range(from, from + pageSize - 1)
+    // Фильтр по городу идёт по связанному магазину — считать и резать страницу
+    // нужно ПОСЛЕ него, иначе total и страницы расходятся.
+    if (city) {
+      const { data, error } = await query
+      if (error) return { items: [], total: 0 }
+      const items = ((data as Product[]) ?? []).filter((p) => p.shop?.city === city)
+      return paginate(items)
+    }
 
+    const from = (safePage - 1) * pageSize
+    query = query.range(from, from + pageSize - 1)
     const { data, count, error } = await query
-    if (error) return inMemory()
-    // Фильтр по городу — по связанному магазину, поэтому пост-фильтрация.
-    let items = (data as Product[]) ?? []
-    if (city) items = items.filter((p) => p.shop?.city === city)
-    return { items, total: count ?? items.length }
+    if (error) return { items: [], total: 0 }
+    return { items: (data as Product[]) ?? [], total: count ?? 0 }
   } catch {
-    return inMemory()
+    return { items: [], total: 0 }
   }
 }
 
@@ -229,12 +250,12 @@ export async function getReviewsForProduct(productId: string): Promise<Review[]>
     const supabase = await createClient()
     const { data } = await supabase
       .from('reviews')
-      .select('*, author:profiles(*)')
+      .select(REVIEW_WITH_AUTHOR)
       .eq('product_id', productId)
       .order('created_at', { ascending: false })
     return (data as Review[]) ?? []
   } catch {
-    return demoReviews.filter((r) => r.product_id === productId)
+    return []
   }
 }
 
@@ -251,7 +272,7 @@ export async function getShopReviews(shopId: string): Promise<Review[]> {
     if (ids.length === 0) return []
     const { data } = await supabase
       .from('reviews')
-      .select('*, author:profiles(*)')
+      .select(REVIEW_WITH_AUTHOR)
       .in('product_id', ids)
       .order('created_at', { ascending: false })
     return (data as Review[]) ?? []
@@ -262,7 +283,7 @@ export async function getShopReviews(shopId: string): Promise<Review[]> {
 
 // ---------- Заказы и записи магазина (кабинет продавца) ----------
 
-/** Входящие заказы магазина. */
+/** Входящие заказы магазина — с позициями и контактами покупательницы. */
 export async function getOrdersByShop(shopId: string): Promise<Order[]> {
   if (!isSupabaseConfigured()) {
     return demoOrders.filter((o) => o.shop_id === shopId)
@@ -271,8 +292,26 @@ export async function getOrdersByShop(shopId: string): Promise<Order[]> {
     const supabase = await createClient()
     const { data } = await supabase
       .from('orders')
-      .select('*')
+      .select(ORDER_WITH_ITEMS)
       .eq('shop_id', shopId)
+      .order('created_at', { ascending: false })
+    return (data as Order[]) ?? []
+  } catch {
+    return []
+  }
+}
+
+/** Заказы покупательницы — с позициями. */
+export async function getOrdersByBuyer(userId: string): Promise<Order[]> {
+  if (!isSupabaseConfigured()) {
+    return demoOrders.filter((o) => o.buyer_id === userId)
+  }
+  try {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('orders')
+      .select(ORDER_WITH_ITEMS)
+      .eq('buyer_id', userId)
       .order('created_at', { ascending: false })
     return (data as Order[]) ?? []
   } catch {
@@ -310,10 +349,10 @@ export async function getCommunityPosts(limit = 3): Promise<CommunityPost[]> {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit)
-    if (error || !data?.length) return demoPosts.slice(0, limit)
-    return (data as CommunityPost[]).map((p) => ({ ...p, comments: p.comments ?? [] }))
+    if (error) return []
+    return ((data as CommunityPost[]) ?? []).map((p) => ({ ...p, comments: p.comments ?? [] }))
   } catch {
-    return demoPosts.slice(0, limit)
+    return []
   }
 }
 
@@ -334,7 +373,7 @@ export async function getAssistantCatalog(limit = 150): Promise<Product[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('products')
-      .select('*, shop:shops(*)')
+      .select(PRODUCT_WITH_SHOP)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -371,11 +410,11 @@ export async function search(q: string): Promise<{ products: Product[]; shops: S
     const [{ data: products }, { data: shops }] = await Promise.all([
       supabase
         .from('products')
-        .select('*, shop:shops(*)')
+        .select(PRODUCT_WITH_SHOP)
         .or(`name.ilike.%${safe}%,description.ilike.%${safe}%`)
         .eq('is_active', true)
         .limit(24),
-      supabase.from('shops').select('*').ilike('name', `%${term}%`).limit(12),
+      supabase.from('shops').select('*').ilike('name', `%${safe}%`).limit(12),
     ])
     return { products: (products as Product[]) ?? [], shops: (shops as Shop[]) ?? [] }
   } catch {

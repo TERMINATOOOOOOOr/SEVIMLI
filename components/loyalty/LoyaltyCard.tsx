@@ -75,6 +75,8 @@ export default function LoyaltyCard({ className }: { className?: string }) {
   // Настройки среды: reduced-motion (с подпиской на смену), тач, iOS-гироскоп
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // Настройки среды читаются только на клиенте после монтирования — осознанный setState в эффекте
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReduced(mq.matches)
     const onChange = () => setReduced(mq.matches)
     mq.addEventListener('change', onChange)

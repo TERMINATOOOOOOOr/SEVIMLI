@@ -23,6 +23,18 @@ export interface Profile {
   created_at: string
 }
 
+/** Публичная часть профиля (view public_profiles) — без телефона и роли. */
+export interface PublicProfile {
+  id: string
+  name: string | null
+  avatar_url: string | null
+  city: string | null
+  loyalty_tier?: LoyaltyTier | null
+  created_at: string
+}
+
+export type ShopPlan = 'free' | 'pro' | 'premium' | 'salon_pro'
+
 export interface Shop {
   id: string
   owner_id: string | null
@@ -37,6 +49,21 @@ export interface Shop {
   rating: number
   reviews_count: number
   created_at: string
+  /** Доставка выполняется магазином: тариф по Ташкенту и порог бесплатной доставки (сум). */
+  delivery_fee?: number | null
+  free_delivery_from?: number | null
+  delivery_days_text?: string | null
+  pickup_enabled?: boolean
+  pickup_address?: string | null
+  ships_to_regions?: boolean
+  /** Тариф продавца и его срок. */
+  plan?: ShopPlan
+  plan_until?: string | null
+  featured_until?: string | null
+  /** Админ подтвердил документы импорта — можно ставить метку «оригинал». */
+  is_original_verified?: boolean
+  /** Демо-магазин из сида (удаляется перед боевым запуском). */
+  is_demo?: boolean
 }
 
 export interface Product {
@@ -64,6 +91,8 @@ export interface Product {
   shop?: Shop | null
 }
 
+export type DeliveryMethod = 'seller' | 'pickup' | 'partner' | 'point'
+
 export interface Order {
   id: string
   buyer_id: string | null
@@ -73,6 +102,18 @@ export interface Order {
   address: string | null
   comment: string | null
   created_at: string
+  delivery_method?: DeliveryMethod
+  delivery_fee?: number | null
+  recipient_name?: string | null
+  recipient_phone?: string | null
+  /** 4-значный код получения (покупательница называет его при выдаче). */
+  pickup_code?: string | null
+  tracking_url?: string | null
+  delivered_at?: string | null
+  dispute_status?: 'none' | 'open' | 'resolved'
+  dispute_note?: string | null
+  /** Подгружается через join order_items. */
+  items?: OrderItem[]
 }
 
 export interface OrderItem {
@@ -91,7 +132,7 @@ export interface Review {
   rating: number
   text: string | null
   created_at: string
-  author?: Profile | null
+  author?: PublicProfile | null
 }
 
 export interface Booking {

@@ -187,7 +187,7 @@ export const VERIFY_CODES: VerifyRecord[] = [
 })
 
 export type VerifyResult =
-  | { status: 'ok'; record: VerifyRecord }
+  | { status: 'ok'; record: VerifyRecord; checks?: number; firstChecked?: string }
   | { status: 'not_found' }
   | { status: 'bad_format' }
 

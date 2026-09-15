@@ -1,67 +1,72 @@
 # Деплой SEVIMLI
 
-Проект: **Next.js 16 (App Router) + Supabase + Tailwind CSS v4**.
-Пока в `.env.local` стоят заглушки, сайт работает на демо-данных (`lib/demo.ts`).
-Чтобы включить реальную базу, авторизацию, заказы и загрузку фото — выполните шаги ниже.
+Проект: **Next.js 16 (App Router) + Supabase + Tailwind CSS v4**, хостинг — **Railway**.
+Пока в `.env.local` стоят заглушки, сайт работает на демо-данных (`lib/demo.ts`) и показывает баннер «Демо-витрина».
+Чтобы включить реальную базу, авторизацию, заказы и загрузку фото — выполните шаги ниже по порядку.
 
 ---
 
 ## 1. Создать проект Supabase
 
-1. Зайдите на https://supabase.com → **New project**.
-2. Задайте имя, пароль БД и регион (ближайший, напр. `Central EU`).
-3. Дождитесь готовности проекта.
+1. https://supabase.com → **New project**: имя `sevimli`, регион **Frankfurt (eu-central-1)**, сильный пароль БД (сохраните).
+2. Дождитесь готовности проекта.
+3. **Project Settings → API**: скопируйте `Project URL`, `anon public` и `service_role` (секрет, только сервер).
 
-## 2. Применить миграцию (создать таблицы)
+## 2. Применить миграции — строго по порядку
 
-1. В Supabase откройте **SQL Editor → New query**.
-2. Скопируйте содержимое [`supabase/migrations/001_init.sql`](supabase/migrations/001_init.sql) и запустите (**Run**).
-3. Это создаст 8 таблиц, RLS-политики, триггер профиля и наполнит категории.
+**SQL Editor → New query**, запускайте файлы из `supabase/migrations/` один за другим:
 
-## 3. Создать Storage-бакеты (для фото)
+| № | Файл | Что делает |
+|---|------|------------|
+| 1 | `001_init.sql` | базовые таблицы, RLS, триггер профиля, категории |
+| 2 | `002_social_loyalty.sql` | сообщество, Q&A, лояльность, поля K-beauty |
+| 3 | `003_waitlist.sql` | лист ожидания |
+| 4 | `004_launch.sql` | **обязательно перед первым живым пользователем**: закрытие дыр RLS, серверное оформление заказа (`create_order`), закрытие по коду (`complete_order`), реестр подлинности (`verify_code`), доставка продавцом, Storage-бакеты и политики, события аналитики |
 
-В **Storage → Create bucket** создайте два **публичных** бакета:
+Каждая миграция идемпотентна — повторный запуск безопасен.
 
-| Имя        | Public |
-|------------|--------|
-| `products` | ✅ да  |
-| `shops`    | ✅ да  |
+## 3. Storage
 
-Затем добавьте политику загрузки для авторизованных (Storage → Policies → New policy → *Allow authenticated uploads*), например:
+Бакеты `products` и `shops` (публичные, до 5 МБ, только jpeg/png/webp) и политики владельца
+создаются миграцией **004** — вручную ничего делать не нужно.
 
-```sql
-create policy "authenticated upload products"
-  on storage.objects for insert to authenticated
-  with check (bucket_id = 'products');
+## 4. Auth и почта (без этого регистрация не работает)
 
-create policy "authenticated upload shops"
-  on storage.objects for insert to authenticated
-  with check (bucket_id = 'shops');
-```
+Встроенная почта Supabase шлёт **2 письма в час и только членам проекта** — для реальных пользователей нужен свой SMTP.
 
-(Чтение публичное, т.к. бакеты public.)
+1. Заведите аккаунт **Resend** (бесплатно 3 000 писем/мес), добавьте домен `sevimli.uz`, пропишите SPF/DKIM/DMARC из панели Resend в DNS домена, дождитесь верификации.
+2. Supabase → **Authentication → SMTP Settings → Enable Custom SMTP**: host `smtp.resend.com`, port `465`, user `resend`, password — API-ключ Resend, sender `hello@sevimli.uz`.
+3. **Authentication → Email Templates**: шаблоны *Confirm signup* и *Reset password* — на русском/узбекском, ссылка вида `{{ .ConfirmationURL }}`.
+4. **URL Configuration**: Site URL — `https://sevimli.uz` (или текущий адрес Railway); Redirect URLs — `https://<домен>/auth/callback`, `http://localhost:3000/auth/callback`.
+5. **Confirm email = ON** (защита от опечаток и мультиаккаунтов). Восстановление пароля работает через `/auth/forgot` → письмо → `/auth/reset`.
+6. Рекомендуется: **Auth → Bot and Abuse Protection** — включить Turnstile.
 
-## 4. Настроить Auth
+## 5. Переменные окружения
 
-- **Authentication → Providers → Email**: включён по умолчанию.
-- Для быстрого старта можно отключить подтверждение по email:
-  **Authentication → Sign In / Providers → Email → Confirm email = OFF**
-  (тогда после регистрации сразу создаётся сессия).
-- **URL Configuration → Site URL**: `http://localhost:3000` для локали и адрес Vercel для прода.
-  В **Redirect URLs** добавьте `http://localhost:3000/auth/callback` и `https://<ваш-домен>/auth/callback`.
-
-## 5. Прописать ключи в `.env.local`
-
-Supabase → **Project Settings → API**. Скопируйте значения в `.env.local`:
+`.env.local` (локально) и Railway → **Variables** (прод):
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://<ваш-проект>.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://<проект>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon public key>
+SUPABASE_SERVICE_ROLE_KEY=<service_role key>     # только сервер: сид, служебные скрипты
+ANTHROPIC_API_KEY=sk-ant-...                      # ассистент Севиля
+ASSISTANT_MODEL=claude-haiku-4-5
+ASSISTANT_DAILY_CAP=2000
+TRUSTED_PROXY_HOPS=1
+NEXT_PUBLIC_DEMO_MODE=                            # 1 — принудительно показывать баннер «демо»
+NEXT_PUBLIC_COURIER_DEMO=                         # 1 — открыть демо-кабинет курьера /courier
 ```
 
-Перезапустите dev-сервер — сайт начнёт брать данные из базы.
+На Railway `NEXT_PUBLIC_*` должны быть заданы **до** сборки (они вшиваются в бандл).
 
-## 6. Локальный запуск
+## 6. Демо-каталог для стенда (необязательно)
+
+```bash
+npm run seed            # залить демо-магазины и товары (помечены is_demo)
+npm run seed -- --clear # удалить всё демо перед боевым запуском
+```
+
+## 7. Локальный запуск
 
 ```bash
 npm install
@@ -69,23 +74,22 @@ npm run dev
 # http://localhost:3000
 ```
 
-## 7. Деплой на Vercel
+## 8. Деплой на Railway
 
-1. Залейте проект на GitHub (`git init && git add . && git commit -m "init" && git push`).
-2. На https://vercel.com → **Add New → Project** → импортируйте репозиторий.
-3. В **Environment Variables** добавьте:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. **Deploy**. Framework preset — Next.js (определится автоматически).
-5. После деплоя добавьте адрес Vercel в Supabase → Auth → **Site URL / Redirect URLs** (шаг 4).
+```bash
+railway up -y --ci --service sevimli
+```
+
+Сборка идёт на сервере; сообщение «Failed to stream build logs» — не ошибка. Проверка: главная без баннера «Демо-витрина», `/courier` → 404.
 
 ---
 
-## Как проверить
+## Как проверить после подключения базы
 
-- Регистрация на `/auth` → создаётся запись в `profiles` (триггер).
-- Кнопка «Стать продавцом» в `/profile` → роль `seller`, открывается `/seller/dashboard`.
-- В `/seller/shop` создайте магазин, в `/seller/products` добавьте товары с фото.
-- Товары появятся на главной, в каталоге и в поиске.
-- Оформление заказа в `/cart` создаёт записи в `orders` и `order_items`.
-- Для салонов (категория `salons`) на странице магазина — кнопка «Записаться» → `bookings`.
+- Регистрация на `/auth` → письмо подтверждения приходит (SMTP) → запись в `profiles` (триггер).
+- «Стать продавцом» в `/profile` → роль `seller` через `become_seller()`, открывается `/seller/dashboard`.
+- `/seller/shop`: магазин, условия доставки и самовывоз; `/seller/products`: товары с фото (Storage).
+- `/cart`: заказ создаётся серверной функцией `create_order` — цены и сток берутся из базы.
+- `/seller/orders`: продавец видит состав заказа и телефон, закрывает заказ по 4-значному коду покупательницы → баллы начисляются автоматически.
+- `/verify`: код из таблицы `authenticity_codes` → счётчик проверок.
+- Снаружи: `curl` с anon-ключом к `/rest/v1/profiles?select=phone` должен вернуть пусто (телефоны не публичны).

@@ -41,6 +41,8 @@ export default function InstallPrompt() {
     // iOS: beforeinstallprompt не существует — показываем подсказку
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
     if (isIos) {
+      // Определение платформы возможно только после монтирования — осознанный setState в эффекте
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowIos(true)
       setVisible(true)
     }

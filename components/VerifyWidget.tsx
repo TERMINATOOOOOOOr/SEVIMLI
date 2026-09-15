@@ -5,10 +5,23 @@ import Link from 'next/link'
 import { ShieldCheck, ShieldAlert, ScanLine, Sparkles } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { verifyCode, VERIFY_CODES, type VerifyResult } from '@/lib/insights'
+import { createClient } from '@/lib/supabase/client'
 import { formatDateLang } from '@/lib/format'
 import { productName } from '@/lib/product-i18n'
 import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
+
+interface RpcVerify {
+  status: 'ok' | 'not_found' | 'bad_format'
+  product_id?: string | null
+  batch?: string | null
+  supplier?: string | null
+  declaration?: string | null
+  imported_at?: string | null
+  expires_at?: string | null
+  checks_count?: number
+  first_checked_at?: string | null
+}
 
 export default function VerifyWidget({
   products,
@@ -23,6 +36,7 @@ export default function VerifyWidget({
   const { lang, t } = useLang()
   const [code, setCode] = useState(initialCode)
   const [result, setResult] = useState<VerifyResult | null>(null)
+  const [checking, setChecking] = useState(false)
   const [demoIdx, setDemoIdx] = useState(0)
 
   const productById = useMemo(() => {
@@ -31,17 +45,54 @@ export default function VerifyWidget({
     return map
   }, [products])
 
-  function check(value?: string) {
+  async function check(value?: string) {
     const v = (value ?? code).trim()
     if (!v) return
-    setResult(verifyCode(v))
+    if (demo) {
+      setResult(verifyCode(v))
+      return
+    }
+    // Боевой режим: реестр в базе, проверка через RPC (считает попытки, ловит клоны наклеек)
+    setChecking(true)
+    try {
+      const { data, error } = await createClient().rpc('verify_code', { p_code: v })
+      if (error || !data) {
+        setResult({ status: 'not_found' })
+        return
+      }
+      const d = data as RpcVerify
+      if (d.status === 'ok') {
+        setResult({
+          status: 'ok',
+          record: {
+            code: v.toUpperCase(),
+            productId: d.product_id ?? '',
+            batch: d.batch ?? '—',
+            importInfo: {
+              supplier: d.supplier ?? '—',
+              declaration: d.declaration ?? '—',
+              importedAt: d.imported_at ?? '',
+              expiresAt: d.expires_at ?? '',
+            },
+          },
+          checks: d.checks_count,
+          firstChecked: d.first_checked_at ?? undefined,
+        })
+      } else {
+        setResult({ status: d.status })
+      }
+    } catch {
+      setResult({ status: 'not_found' })
+    } finally {
+      setChecking(false)
+    }
   }
 
   function fillDemo() {
-    const demo = VERIFY_CODES[demoIdx % VERIFY_CODES.length]
+    const next = VERIFY_CODES[demoIdx % VERIFY_CODES.length]
     setDemoIdx((i) => i + 1)
-    setCode(demo.code)
-    setResult(verifyCode(demo.code))
+    setCode(next.code)
+    setResult(verifyCode(next.code))
   }
 
   const okProduct =
@@ -52,7 +103,7 @@ export default function VerifyWidget({
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          check()
+          void check()
         }}
         className="flex flex-col gap-2 sm:flex-row"
       >
@@ -69,7 +120,7 @@ export default function VerifyWidget({
             spellCheck={false}
           />
         </div>
-        <button type="submit" className="btn-primary shrink-0">
+        <button type="submit" disabled={checking} className="btn-primary shrink-0">
           {t.verify.check}
         </button>
       </form>
@@ -91,6 +142,13 @@ export default function VerifyWidget({
           </p>
           <p className="mt-1 text-sm text-neutral-600">{t.verify.okText}</p>
           {demo && <p className="mt-2 text-xs text-amber-700">{t.verify.demoNote}</p>}
+          {typeof result.checks === 'number' && (
+            <p className={result.checks > 1 ? 'mt-2 text-xs font-medium text-amber-700' : 'mt-2 text-xs text-neutral-500'}>
+              {t.verify.checks} {result.checks}
+              {result.firstChecked ? ` · ${t.verify.firstCheck} ${formatDateLang(result.firstChecked, lang)}` : ''}
+              {result.checks > 1 ? ` — ${t.verify.checksWarn}` : ''}
+            </p>
+          )}
 
           {okProduct && (
             <Link
@@ -116,8 +174,14 @@ export default function VerifyWidget({
               [t.verify.batch, result.record.batch],
               [t.verify.supplier, result.record.importInfo.supplier],
               [t.verify.declaration, result.record.importInfo.declaration],
-              [t.verify.importedAt, formatDateLang(result.record.importInfo.importedAt, lang)],
-              [t.verify.expiresAt, formatDateLang(result.record.importInfo.expiresAt, lang)],
+              [
+                t.verify.importedAt,
+                result.record.importInfo.importedAt ? formatDateLang(result.record.importInfo.importedAt, lang) : '—',
+              ],
+              [
+                t.verify.expiresAt,
+                result.record.importInfo.expiresAt ? formatDateLang(result.record.importInfo.expiresAt, lang) : '—',
+              ],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 sm:block">
                 <dt className="text-neutral-400">{k}</dt>

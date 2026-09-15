@@ -38,7 +38,7 @@ interface CommunityState {
 
 export const useCommunity = create<CommunityState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       posts: demoPosts,
       questions: demoQuestions,
       likedIds: [],

@@ -85,7 +85,12 @@ export default function ProfileView({ profile, email, orders, bookings, demo = f
     if (demo) {
       demoBecomeSeller()
     } else {
-      await createClient().from('profiles').update({ role: 'seller' }).eq('id', profile.id)
+      // Роль меняется только серверной функцией — прямой update колонки role запрещён триггером
+      const { error } = await createClient().rpc('become_seller')
+      if (error) {
+        setBecoming(false)
+        return
+      }
     }
     router.push('/seller/dashboard')
     router.refresh()
@@ -274,7 +279,7 @@ function OrdersList({ orders }: { orders: Order[] }) {
             {eff === 'delivering' && (
               <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-primary-light/60 px-4 py-3">
                 <span className="font-mono text-xl font-bold tracking-[0.3em] text-primary">
-                  {orderPickupCode(o.id)}
+                  {o.pickup_code ?? orderPickupCode(o.id)}
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-neutral-800">{t.profile.pickupCode}</p>
