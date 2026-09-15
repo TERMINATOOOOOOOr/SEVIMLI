@@ -31,6 +31,8 @@ export default function AuthForm() {
   const [notice, setNotice] = useState<string | null>(null)
 
   const configured = isSupabaseConfigured()
+  // Демо-стенд для жюри: база живая, но показываем готовые доступы демо-аккаунта продавца
+  const demoStand = configured && process.env.NEXT_PUBLIC_DEMO_MODE === '1'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -61,8 +63,11 @@ export default function AuthForm() {
       if (tab === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        router.push(redirect)
-        router.refresh()
+        // Полная навигация, а не router.push: cookie сессии гарантированно уходит
+        // в первый же запрос, и middleware не отбрасывает на /auth (гонка клиента).
+        await supabase.auth.getSession()
+        window.location.assign(redirect)
+        return
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -75,8 +80,9 @@ export default function AuthForm() {
         })
         if (error) throw error
         if (data.session) {
-          router.push(redirect)
-          router.refresh()
+          await supabase.auth.getSession()
+          window.location.assign(redirect)
+          return
         } else {
           setNotice(tr.auth.emailSent)
         }
@@ -115,12 +121,12 @@ export default function AuthForm() {
         ))}
       </div>
 
-      {!configured && (
+      {(!configured || demoStand) && (
         <div className="mb-5 rounded-xl bg-primary-light p-4 text-sm text-primary">
           <p className="flex items-center gap-2 font-semibold">
             <Sparkles size={16} /> {tr.auth.demoMode}
           </p>
-          <p className="mt-1.5 text-primary/80">{tr.auth.demoText}</p>
+          <p className="mt-1.5 text-primary/80">{demoStand ? tr.auth.demoStandText : tr.auth.demoText}</p>
           <p className="mt-2 font-mono text-xs text-primary/90">
             {DEMO_EMAIL} / {DEMO_PASSWORD}
           </p>
