@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AtSign, Send, Phone } from 'lucide-react'
+import { AtSign, Send } from 'lucide-react'
 import { useLang } from '@/components/LangProvider'
 
 export default function Footer() {
@@ -26,7 +26,6 @@ export default function Footer() {
         { href: '/auth', label: t.footer.becomeSeller },
         { href: '/seller/dashboard', label: t.footer.sellerCabinet },
         { href: '/seller/products', label: t.footer.myProducts },
-        { href: '/courier', label: t.courier.title },
       ],
     },
     {
@@ -48,14 +47,21 @@ export default function Footer() {
           <span className="font-display text-2xl font-extrabold text-white">SEVIMLI</span>
           <p className="mt-3 max-w-xs text-sm text-neutral-400">{t.footer.about}</p>
           <div className="mt-4 flex gap-3">
-            <a href="#" aria-label="Instagram" className="rounded-full bg-neutral-800 p-2 hover:bg-primary">
-              <AtSign size={18} />
-            </a>
-            <a href="#" aria-label="Telegram" className="rounded-full bg-neutral-800 p-2 hover:bg-primary">
+            <a
+              href="https://t.me/sevimli_uz"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Telegram"
+              className="rounded-full bg-neutral-800 p-2 hover:bg-primary"
+            >
               <Send size={18} />
             </a>
-            <a href="#" aria-label="Телефон" className="rounded-full bg-neutral-800 p-2 hover:bg-primary">
-              <Phone size={18} />
+            <a
+              href="mailto:hello@sevimli.uz"
+              aria-label="E-mail"
+              className="rounded-full bg-neutral-800 p-2 hover:bg-primary"
+            >
+              <AtSign size={18} />
             </a>
           </div>
         </div>

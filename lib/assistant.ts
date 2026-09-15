@@ -240,8 +240,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'delivery',
     words: /доставк|привез|когда получ|сколько.*(идёт|идет|дней|ждать)|yetkaz|dostavka/i,
     answer: {
-      ru: '🚚 Доставка: у большинства магазинов бесплатная по Ташкенту, обычно за 1 день. По регионам — быстрая отправка; точный срок и стоимость видно в корзине перед оплатой.',
-      uz: '🚚 Yetkazish: aksariyat doʻkonlarda Toshkent boʻylab bepul, odatda 1 kun ichida. Viloyatlarga tez joʻnatma; aniq muddat va narx savatchada koʻrinadi.',
+      ru: '🚚 Доставка: её выполняет магазин — своим курьером или через службу доставки, обычно по Ташкенту за 1 день. Стоимость и срок указывает магазин; у многих бесплатно от 200 000 сум. Точные условия видно при оформлении заказа.',
+      uz: '🚚 Yetkazish: uni doʻkon bajaradi — oʻz kuryeri yoki yetkazib berish xizmati orqali, odatda Toshkent boʻylab 1 kunda. Narx va muddatni doʻkon belgilaydi; koʻpchilikda 200 000 soʻmdan bepul. Aniq shartlar buyurtma rasmiylashtirishda koʻrinadi.',
     },
   },
   {
@@ -264,24 +264,24 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'loyalty',
     words: /балл|кешб[эе]к|кешбек|лояльн|бонус|уровн|cashback|sodiqlik/i,
     answer: {
-      ru: '💎 Лояльность: копите баллы с каждой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. Кешбэк баллами растёт с 1% до 5%, баллами можно оплачивать до 50% заказа.',
-      uz: '💎 Sodiqlik: har xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Keshbek 1% dan 5% gacha, ballar bilan buyurtmaning 50% gacha toʻlash mumkin.',
+      ru: '💎 Лояльность: копите баллы с каждой завершённой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. Кешбэк баллами растёт с 1% до 5%; баллами можно оплатить до 20% заказа, действуют 6 месяцев.',
+      uz: '💎 Sodiqlik: har yakunlangan xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Keshbek 1% dan 5% gacha; ballar bilan buyurtmaning 20% gacha toʻlash mumkin, ballar 6 oy amal qiladi.',
     },
   },
   {
     id: 'pay',
     words: /оплат|оплачив|картой|click|payme|uzcard|humo|наличн|to.?lov/i,
     answer: {
-      ru: '💳 Оплата: картами Uzcard/Humo и через Click/Payme, а также баллами лояльности (до 50% заказа). Это демо — платёжные провайдеры подключаются на проде.',
-      uz: '💳 Toʻlov: Uzcard/Humo va Click/Payme orqali, shuningdek sodiqlik ballari bilan (50% gacha). Bu demo — toʻlov provayderlari prod versiyada ulanadi.',
+      ru: '💳 Оплата: заказ оплачивается магазину — при получении или по его ссылке Click/Payme; онлайн-оплата картой на площадке подключается. Баллами лояльности — до 20% заказа.',
+      uz: '💳 Toʻlov: buyurtma doʻkonga toʻlanadi — qabul qilishda yoki uning Click/Payme havolasi orqali; platformada onlayn toʻlov ulanmoqda. Sodiqlik ballari bilan — buyurtmaning 20% gacha.',
     },
   },
   {
     id: 'return',
     words: /возврат|обмен|вернуть|не подош|брак|qaytar|almashtir/i,
     answer: {
-      ru: '↩️ Возврат и обмен: если товар не подошёл или с браком — оформляете возврат через магазин, деньги возвращаются на карту или баллами. Спорные случаи площадка решает на стороне покупателя.',
-      uz: '↩️ Qaytarish: mahsulot mos kelmasa yoki nuqsonli boʻlsa — doʻkon orqali qaytarasiz, pul kartaga yoki ballarga qaytadi. Nizoni platforma xaridor foydasiga hal qiladi.',
+      ru: '↩️ Возврат и обмен: оформляются через магазин-продавец по закону «О защите прав потребителей» — обмен товара надлежащего качества в течение 10 дней; косметика, парфюмерия, бельё и предметы гигиены обмену не подлежат, кроме брака. При споре платформа выступает медиатором между вами и магазином.',
+      uz: '↩️ Qaytarish va almashtirish: sotuvchi doʻkon orqali «Isteʼmolchilar huquqlarini himoya qilish toʻgʻrisida»gi qonun boʻyicha — sifatli mahsulotni 10 kun ichida almashtirish mumkin; kosmetika, parfyumeriya, ichki kiyim va gigiyena buyumlari almashtirilmaydi (brakdan tashqari). Nizoda platforma siz bilan doʻkon oʻrtasida vositachi boʻladi.',
     },
   },
   {

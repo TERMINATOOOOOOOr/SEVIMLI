@@ -7,13 +7,14 @@ export const metadata: Metadata = { title: 'Политика конфиденц�
 const content: Record<string, { title: string; subtitle: string; sections: InfoSection[] }> = {
   ru: {
     title: 'Политика конфиденциальности',
-    subtitle: 'Действует с 1 августа 2026 года.',
+    subtitle: 'Редакция от 15 сентября 2026 года.',
     sections: [
       {
         h: '1. Общие положения',
         p: [
-          'Настоящая Политика описывает, как платформа SEVIMLI (далее — «Платформа») собирает, использует и защищает персональные данные пользователей. Обработка данных ведётся в соответствии с Законом Республики Узбекистан «О персональных данных» (ЗРУ-547 от 02.07.2019).',
-          'Используя Платформу, вы соглашаетесь с условиями настоящей Политики.',
+          'Настоящая Политика описывает, как платформа SEVIMLI (далее — «Платформа») собирает, использует и защищает персональные данные пользователей. Обработка данных ведётся в соответствии с Законом Республики Узбекистан «О персональных данных» (ЗРУ-547 от 02.07.2019, в действующей редакции).',
+          'Оператор персональных данных — команда SEVIMLI (г. Ташкент); реквизиты юридического лица публикуются на этой странице после его регистрации. Контакт по вопросам данных: privacy@sevimli.uz.',
+          'Согласие на обработку данных вы даёте при регистрации и при оформлении заказа (отдельная отметка). Согласие можно отозвать в любой момент.',
         ],
       },
       {
@@ -38,7 +39,8 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: '4. Хранение и защита',
         p: [
-          'Данные хранятся на защищённых серверах; доступ ограничен сотрудниками, которым он необходим для работы. Платёжные данные карт мы не храним — их обрабатывают сертифицированные платёжные провайдеры.',
+          'Данные хранятся в защищённой облачной базе Supabase (дата-центр в ЕС, Франкфурт) с шифрованием при передаче и хранении; трансграничная передача выполняется с соблюдением требований ст. 27-1 Закона (страны с адекватной защитой, стандартные договорные условия). Биометрические и иные особые категории данных мы не собираем. Доступ ограничен сотрудниками, которым он необходим для работы. Платёжные данные карт мы не храним — их обрабатывают сертифицированные платёжные провайдеры.',
+          'Срок хранения: пока существует аккаунт и далее в объёме, требуемом законом (например, данные заказов — для бухгалтерского учёта).',
         ],
       },
       {
@@ -66,13 +68,14 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
   },
   uz: {
     title: 'Maxfiylik siyosati',
-    subtitle: '2026-yil 1-avgustdan amal qiladi.',
+    subtitle: '2026-yil 15-sentabr tahriri.',
     sections: [
       {
         h: '1. Umumiy qoidalar',
         p: [
-          "Ushbu Siyosat SEVIMLI platformasi (keyingi o'rinlarda — «Platforma») foydalanuvchilarning shaxsiy ma'lumotlarini qanday yig'ishi, ishlatishi va himoya qilishini tavsiflaydi. Ma'lumotlar O'zbekiston Respublikasining «Shaxsga doir ma'lumotlar to'g'risida»gi qonuniga (O'RQ-547, 02.07.2019) muvofiq qayta ishlanadi.",
-          'Platformadan foydalanish orqali siz ushbu Siyosat shartlariga rozilik bildirasiz.',
+          "Ushbu Siyosat SEVIMLI platformasi (keyingi o'rinlarda — «Platforma») foydalanuvchilarning shaxsiy ma'lumotlarini qanday yig'ishi, ishlatishi va himoya qilishini tavsiflaydi. Ma'lumotlar O'zbekiston Respublikasining «Shaxsga doir ma'lumotlar to'g'risida»gi qonuniga (O'RQ-547, 02.07.2019, amaldagi tahrir) muvofiq qayta ishlanadi.",
+          "Shaxsiy ma'lumotlar operatori — SEVIMLI jamoasi (Toshkent sh.); yuridik shaxs rekvizitlari ro'yxatdan o'tgach shu sahifada e'lon qilinadi. Ma'lumotlar bo'yicha aloqa: privacy@sevimli.uz.",
+          "Ma'lumotlarni qayta ishlashga rozilikni ro'yxatdan o'tishda va buyurtma berishda (alohida belgi) berasiz. Rozilikni istalgan vaqtda qaytarib olish mumkin.",
         ],
       },
       {
@@ -97,7 +100,8 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: '4. Saqlash va himoya',
         p: [
-          "Ma'lumotlar himoyalangan serverlarda saqlanadi; ularga kirish faqat ishi uchun zarur bo'lgan xodimlar bilan cheklangan. Karta to'lov ma'lumotlarini saqlamaymiz — ularni sertifikatlangan to'lov provayderlari qayta ishlaydi.",
+          "Ma'lumotlar himoyalangan Supabase bulut bazasida (Yevropa Ittifoqi, Frankfurt data-markazi) uzatish va saqlashda shifrlangan holda saqlanadi; transchegaraviy uzatish Qonunning 27-1-moddasi talablariga rioya qilgan holda amalga oshiriladi. Biometrik va boshqa maxsus toifadagi ma'lumotlarni yig'maymiz. Kirish faqat ishi uchun zarur bo'lgan xodimlar bilan cheklangan. Karta to'lov ma'lumotlarini saqlamaymiz — ularni sertifikatlangan to'lov provayderlari qayta ishlaydi.",
+          "Saqlash muddati: akkaunt mavjud bo'lguncha va keyin qonun talab qiladigan hajmda (masalan, buyurtma ma'lumotlari — buxgalteriya hisobi uchun).",
         ],
       },
       {

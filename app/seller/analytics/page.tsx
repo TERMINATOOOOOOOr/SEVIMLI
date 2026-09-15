@@ -3,6 +3,7 @@ import { Eye, ShoppingCart, Wallet, Percent, Receipt, Repeat } from 'lucide-reac
 import { getSellerContext } from '@/lib/seller'
 import { getOrdersByShop, getProductsByShop } from '@/lib/data'
 import { getSellerAnalytics } from '@/lib/insights'
+import { isSupabaseConfigured } from '@/lib/utils'
 import { formatPrice } from '@/lib/format'
 import NoShop from '@/components/seller/NoShop'
 import TrendChart from '@/components/charts/TrendChart'
@@ -21,15 +22,20 @@ export default async function AnalyticsPage() {
     getOrdersByShop(shop.id),
     getProductsByShop(shop.id),
   ])
-  const a = getSellerAnalytics(shop.id, orders, products)
+  const synthetic = !isSupabaseConfigured()
+  const a = getSellerAnalytics(shop.id, orders, products, { synthetic })
 
   const stats = [
     { label: 'Выручка за 30 дней', value: formatPrice(a.totals.revenue), icon: Wallet },
     { label: 'Заказы', value: String(a.totals.orders), icon: ShoppingCart },
-    { label: 'Просмотры товаров', value: a.totals.views.toLocaleString('ru-RU'), icon: Eye },
-    { label: 'Конверсия в заказ', value: `${(a.totals.conversion * 100).toFixed(1)}%`, icon: Percent },
+    ...(synthetic
+      ? [
+          { label: 'Просмотры товаров', value: a.totals.views.toLocaleString('ru-RU'), icon: Eye },
+          { label: 'Конверсия в заказ', value: `${(a.totals.conversion * 100).toFixed(1)}%`, icon: Percent },
+        ]
+      : []),
     { label: 'Средний чек', value: formatPrice(a.totals.avgCheck), icon: Receipt },
-    { label: 'Повторные покупки', value: `${Math.round(a.totals.repeatShare * 100)}%`, icon: Repeat },
+    { label: 'Повторные покупатели', value: `${Math.round(a.totals.repeatShare * 100)}%`, icon: Repeat },
   ]
 
   const revenueData = a.days.map((d) => ({ label: fmtDay(d.date), value: d.revenue }))
@@ -39,9 +45,16 @@ export default async function AnalyticsPage() {
   return (
     <div>
       <h1 className="mb-1 font-display text-2xl font-bold text-neutral-900">Аналитика</h1>
-      <p className="mb-6 text-sm text-neutral-400">
-        Последние 30 дней · обновляется ежедневно
-      </p>
+      {synthetic ? (
+        <p className="mb-6 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          Демо-режим: цифры ниже — пример. Реальная аналитика считается по заказам и событиям
+          магазина после подключения базы.
+        </p>
+      ) : (
+        <p className="mb-6 text-sm text-neutral-400">
+          Последние 30 дней · по фактическим заказам магазина
+        </p>
+      )}
 
       {/* Ключевые метрики */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -64,10 +77,17 @@ export default async function AnalyticsPage() {
           <h2 className="mb-4 font-semibold text-neutral-900">Выручка по дням</h2>
           <TrendChart data={revenueData} mode="area" color="#c4507a" format="price" />
         </div>
-        <div className="rounded-2xl border border-neutral-200 p-5">
-          <h2 className="mb-4 font-semibold text-neutral-900">Просмотры товаров по дням</h2>
-          <TrendChart data={viewsData} mode="area" color="#1d9e75" format="int" />
-        </div>
+        {synthetic ? (
+          <div className="rounded-2xl border border-neutral-200 p-5">
+            <h2 className="mb-4 font-semibold text-neutral-900">Просмотры товаров по дням</h2>
+            <TrendChart data={viewsData} mode="area" color="#1d9e75" format="int" />
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-neutral-300 p-5 text-sm text-neutral-500">
+            Просмотры и конверсия появятся после включения событий аналитики (просмотр товара →
+            корзина → заказ).
+          </div>
+        )}
       </div>
 
       {/* Воронка продаж */}
@@ -101,6 +121,7 @@ export default async function AnalyticsPage() {
         </div>
       </div>
 
+      {synthetic && (
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         {/* Топ товаров */}
         <div className="rounded-2xl border border-neutral-200 p-5">
@@ -150,6 +171,7 @@ export default async function AnalyticsPage() {
           </p>
         </div>
       </div>
+      )}
     </div>
   )
 }

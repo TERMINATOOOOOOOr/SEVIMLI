@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { Bike } from 'lucide-react'
 import { getT } from '@/lib/lang-server'
 import CourierApp from '@/components/courier/CourierApp'
@@ -7,7 +8,14 @@ import WeightlessBg from '@/components/ui/Weightless'
 
 export const metadata: Metadata = { title: 'Кабинет курьера · Kuryer kabineti' }
 
+/**
+ * Кабинет курьера — демо-инструмент. Собственной курьерской сети у SEVIMLI нет:
+ * доставку выполняет магазин или партнёрская служба. Роут скрыт за флагом,
+ * чтобы не вводить в заблуждение о зрелости логистики; код остаётся для
+ * будущего режима «курьер магазина».
+ */
 export default async function CourierPage() {
+  if (process.env.NEXT_PUBLIC_COURIER_DEMO !== '1') notFound()
   const { t } = await getT()
 
   return (

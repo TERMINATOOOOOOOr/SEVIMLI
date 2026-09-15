@@ -24,7 +24,7 @@ export const TIERS: TierConfig[] = [
     cashback: 1,
     gradient: 'from-[#8a5a46] via-[#b7876a] to-[#5f3a28]',
     chip: 'linear-gradient(160deg, #d9a08c, #8a5a48)',
-    perks: ['1% кешбэк баллами', 'Бесплатная доставка по Ташкенту', 'Доступ к сообществу'],
+    perks: ['1% кешбэк баллами', 'Ранний доступ к акциям', 'Доступ к сообществу'],
   },
   {
     id: 'silver',
@@ -42,7 +42,7 @@ export const TIERS: TierConfig[] = [
     cashback: 3,
     gradient: 'from-[#a8874a] via-[#d3b87e] to-[#8a6a34]',
     chip: 'linear-gradient(160deg, #ecd9a8, #a8874a)',
-    perks: ['3% кешбэк баллами', 'Приоритетная доставка', 'Закрытые распродажи'],
+    perks: ['3% кешбэк баллами', 'Приоритетная поддержка', 'Закрытые распродажи'],
   },
   {
     id: 'platinum',
@@ -51,9 +51,14 @@ export const TIERS: TierConfig[] = [
     cashback: 5,
     gradient: 'from-primary via-primary-dark to-neutral-900',
     chip: 'linear-gradient(160deg, #f3c6dd, #8d2f5f)',
-    perks: ['5% кешбэк баллами', 'Персональный бьюти-консультант', 'Бесплатные сэмплы K-beauty'],
+    perks: ['5% кешбэк баллами', 'Подарки от магазинов-партнёров', 'Ранний доступ к Davra-дропам'],
   },
 ]
+
+/** Баллами можно оплатить не больше этой доли заказа. */
+export const MAX_POINTS_SHARE = 0.2
+/** Срок жизни баллов, дней. */
+export const POINTS_TTL_DAYS = 180
 
 /** 1 балл за каждые 1000 сум заказа (базовое начисление). */
 export const POINTS_PER_SUM = 1000

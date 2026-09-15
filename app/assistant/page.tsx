@@ -29,6 +29,7 @@ export default async function AssistantPage() {
           {t.assistant.title}
         </h1>
         <p className="mt-2 text-neutral-600">{t.assistant.subtitle}</p>
+        <p className="mt-1 text-xs text-neutral-400">{t.assistant.aiNote}</p>
       </header>
 
       <AssistantChat products={products} />

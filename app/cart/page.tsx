@@ -17,9 +17,8 @@ import Thumb from '@/components/ui/Thumb'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 
-/** Доставка бесплатна (промо запуска). Старая цена показывается зачёркнутой. */
+/** Доставку выполняет магазин и подтверждает её стоимость при обработке заказа — в итог не входит. */
 const DELIVERY = 0
-const DELIVERY_BEFORE = 15000
 
 export default function CartPage() {
   const router = useRouter()
@@ -33,6 +32,7 @@ export default function CartPage() {
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [comment, setComment] = useState('')
+  const [consent, setConsent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
@@ -51,6 +51,7 @@ export default function CartPage() {
   async function placeOrder(e: React.FormEvent) {
     e.preventDefault()
     if (items.length === 0) return
+    if (!consent) return
     setError(null)
     setSubmitting(true)
 
@@ -233,6 +234,26 @@ export default function CartPage() {
               <label className="mb-1.5 block text-sm font-medium text-neutral-700">{t.cart.commentLabel}</label>
               <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={2} className="input resize-none" />
             </div>
+            <p className="text-xs text-neutral-500">{t.cart.deliveryNote}</p>
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-neutral-600">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                required
+                className="mt-1 h-4 w-4 shrink-0 accent-primary"
+              />
+              <span>
+                {t.cart.consent}{' '}
+                <Link href="/terms" className="text-primary hover:underline" target="_blank">
+                  {t.footer.terms}
+                </Link>
+                {' · '}
+                <Link href="/privacy" className="text-primary hover:underline" target="_blank">
+                  {t.footer.privacy}
+                </Link>
+              </span>
+            </label>
             {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>}
           </form>
         </div>
@@ -251,10 +272,7 @@ export default function CartPage() {
               <span className="flex items-center gap-1.5 text-neutral-500">
                 <Truck size={15} /> {t.cart.delivery}
               </span>
-              <span className="flex items-center gap-2">
-                <span className="text-neutral-400 line-through">{formatPriceLang(DELIVERY_BEFORE, lang)}</span>
-                <span className="font-semibold text-secondary">{t.cart.free}</span>
-              </span>
+              <span className="text-sm text-neutral-600">{t.cart.deliveryBySeller}</span>
             </div>
             <div className="mt-3 flex justify-between border-t border-neutral-200 pt-3 text-lg">
               <span className="font-medium">{t.cart.total}</span>
@@ -269,7 +287,12 @@ export default function CartPage() {
             </div>
           )}
 
-          <button type="submit" form="checkout" disabled={submitting} className="btn-primary mt-5 w-full">
+          <button
+            type="submit"
+            form="checkout"
+            disabled={submitting || !consent}
+            className="btn-primary mt-5 w-full"
+          >
             {submitting ? t.cart.submitting : t.cart.submit}
           </button>
         </aside>

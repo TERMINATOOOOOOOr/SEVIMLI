@@ -10,9 +10,17 @@ const AUTH_PAGE = /^\/(auth|login|signin|signup)(\/|$)/i
 const AUTH_LIMIT = 5
 const AUTH_WINDOW_MS = 15 * 60 * 1000
 
+/** Демо-кабинет курьера открыт только по флагу: своей курьерской сети у SEVIMLI нет. */
+const COURIER_DEMO = process.env.NEXT_PUBLIC_COURIER_DEMO === '1'
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const method = request.method
+
+  // Настоящий 404 (а не 200 со стримом not-found из-за loading.tsx)
+  if (!COURIER_DEMO && /^\/courier(\/|$)/.test(path)) {
+    return NextResponse.rewrite(new URL('/__hidden__', request.url), { status: 404 })
+  }
 
   const isBruteforceable =
     API_AUTH.test(path) || (AUTH_PAGE.test(path) && method !== 'GET' && method !== 'HEAD')

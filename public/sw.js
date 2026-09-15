@@ -3,7 +3,7 @@
    ВАЖНО: respondWith всегда получает настоящий Response — undefined ломает
    навигацию («This page couldn't load» в Chrome). */
 
-const VERSION = 'sevimli-v3'
+const VERSION = 'sevimli-v4'
 const IMG_CACHE = `${VERSION}-img`
 const STATIC_CACHE = `${VERSION}-static`
 const PAGE_CACHE = `${VERSION}-pages`
@@ -17,6 +17,13 @@ button{margin-top:16px;background:#c4507a;color:#fff;border:0;border-radius:999p
 <body><div class="card"><h1>Нет соединения · Aloqa yo'q</h1>
 <p>Проверьте интернет и попробуйте ещё раз.<br>Internetni tekshirib, qayta urinib ko'ring.</p>
 <button onclick="location.reload()">Обновить · Yangilash</button></div></body></html>`
+
+/* Личные страницы (профиль, корзина, кабинет, вход) на общем устройстве
+   не должны оставаться в Cache Storage после выхода из аккаунта. */
+const PRIVATE_PREFIXES = ['/profile', '/cart', '/seller', '/auth', '/courier', '/loyalty', '/davra']
+function isPrivate(pathname) {
+  return PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))
+}
 
 function offlineResponse() {
   return new Response(OFFLINE_HTML, {
@@ -57,6 +64,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(staleWhileRevalidate(request, STATIC_CACHE))
     return
   }
+
+  // API и приватные страницы никогда не трогаем: ни кэша, ни офлайн-подмены
+  if (url.pathname.startsWith('/api/')) return
+  if (isPrivate(url.pathname)) return
 
   // Навигация: сеть → кэш этой страницы → кэш главной → офлайн-страница
   if (request.mode === 'navigate') {

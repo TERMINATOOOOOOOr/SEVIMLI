@@ -1,8 +1,8 @@
 /**
- * Лёгкий in-memory rate-limiter для middleware (перебор логина, брутфорс).
- * Держит счётчики попыток в Map по ключу (обычно IP). Для одного инстанса
- * на Railway этого достаточно; в проде с несколькими репликами ключи
- * выносятся в общий стор (Upstash/Redis) — интерфейс тот же.
+ * Лёгкий in-memory rate-limiter (перебор логина, квота ассистента).
+ * Держит счётчики в Map по ключу (IP / user / global). Для одного инстанса
+ * на Railway этого достаточно; при нескольких репликах ключи выносятся
+ * в общий стор (Upstash/Redis) — интерфейс тот же.
  */
 
 interface Bucket {
@@ -11,6 +11,11 @@ interface Bucket {
 }
 
 const buckets = new Map<string, Bucket>()
+
+/** Порог, после которого подметаем протухшие ключи. */
+const SWEEP_AT = 5000
+/** Жёсткий потолок: если Map всё равно разросся (флуд уникальными ключами) — сбрасываем. */
+const HARD_CAP = 20000
 
 export interface RateResult {
   ok: boolean
@@ -21,9 +26,9 @@ export interface RateResult {
 export function rateLimit(key: string, limit: number, windowMs: number): RateResult {
   const now = Date.now()
 
-  // Изредка подметаем протухшие ключи, чтобы Map не рос без предела
-  if (buckets.size > 5000) {
+  if (buckets.size > SWEEP_AT) {
     for (const [k, b] of buckets) if (now > b.reset) buckets.delete(k)
+    if (buckets.size > HARD_CAP) buckets.clear()
   }
 
   const b = buckets.get(key)
@@ -39,9 +44,24 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateRes
   return { ok: true, remaining: limit - b.count, retryAfter: 0 }
 }
 
-/** IP клиента из заголовков прокси (Railway отдаёт x-forwarded-for). */
+/**
+ * Сколько доверенных прокси стоит перед приложением. Railway добавляет
+ * ровно один hop — значит доверять можно только ПОСЛЕДНЕМУ адресу в
+ * X-Forwarded-For: всё левее клиент может подделать сам.
+ */
+const TRUSTED_HOPS = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS ?? 1) || 1)
+
+/** IP клиента из заголовков прокси — берём адрес, который поставил доверенный edge. */
 export function clientIp(headers: Headers): string {
   const fwd = headers.get('x-forwarded-for')
-  if (fwd) return fwd.split(',')[0].trim()
+  if (fwd) {
+    const parts = fwd
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const idx = Math.max(0, parts.length - TRUSTED_HOPS)
+    const ip = parts[idx]
+    if (ip) return ip
+  }
   return headers.get('x-real-ip') ?? 'unknown'
 }

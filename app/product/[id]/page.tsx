@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { Store, ArrowRight, Truck, ShieldCheck } from 'lucide-react'
 import { getProductById, getReviewsForProduct, getRelatedProducts } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
-import { getPriceHistory, getMarketComparison } from '@/lib/insights'
 import { productName, productDesc, cityName } from '@/lib/product-i18n'
 import { formatPriceLang, discountPercent } from '@/lib/format'
 import { categoryEmoji, categoryLabel } from '@/lib/categories'
@@ -13,8 +12,6 @@ import AddToCart from '@/components/product/AddToCart'
 import DavraButton from '@/components/davra/DavraButton'
 import ProductQA from '@/components/product/ProductQA'
 import ProductPosts from '@/components/product/ProductPosts'
-import PriceHistory from '@/components/product/PriceHistory'
-import MarketCompare from '@/components/product/MarketCompare'
 import ProductCard from '@/components/cards/ProductCard'
 import ReviewCard from '@/components/cards/ReviewCard'
 import StarRating from '@/components/ui/StarRating'
@@ -47,8 +44,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const discount = discountPercent(product.price, product.old_price)
   const marketSaving = discountPercent(product.price, product.market_price)
-  const priceHistory = getPriceHistory(product)
-  const marketOffers = getMarketComparison(product)
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
@@ -170,12 +165,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           )}
         </div>
       </div>
-
-      {/* Умные фичи: история цены + сравнение с рынком */}
-      <section className="mt-12 grid gap-6 lg:grid-cols-2">
-        <PriceHistory points={priceHistory} />
-        {marketOffers && <MarketCompare offers={marketOffers} />}
-      </section>
 
       {/* Вопросы о товаре — спросить у продавца и сообщества */}
       <ProductQA productId={product.id} />

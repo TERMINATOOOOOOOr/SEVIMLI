@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { AlertCircle, CheckCircle2, Sparkles } from 'lucide-react'
@@ -24,6 +25,7 @@ export default function AuthForm() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -34,6 +36,7 @@ export default function AuthForm() {
     e.preventDefault()
     setError(null)
     setNotice(null)
+    if (tab === 'register' && !consent) return
 
     // Демо-режим: базы нет, поэтому пускаем локально и создаём демо-сессию.
     if (!configured) {
@@ -64,7 +67,11 @@ export default function AuthForm() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name, phone } },
+          options: {
+            data: { name, phone, consent_at: new Date().toISOString() },
+            // Ссылка из письма подтверждения возвращает на сайт, а не на дефолтный Site URL
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+          },
         })
         if (error) throw error
         if (data.session) {
@@ -183,7 +190,36 @@ export default function AuthForm() {
             placeholder={tr.auth.passwordPlaceholder}
             className="input"
           />
+          {tab === 'login' && (
+            <p className="mt-2 text-right text-sm">
+              <Link href="/auth/forgot" className="text-primary hover:underline">
+                {tr.auth.forgot}
+              </Link>
+            </p>
+          )}
         </div>
+
+        {tab === 'register' && (
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-neutral-600">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              required
+              className="mt-1 h-4 w-4 shrink-0 accent-primary"
+            />
+            <span>
+              {tr.auth.consentPrefix}{' '}
+              <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                {tr.auth.consentTerms}
+              </Link>{' '}
+              {tr.auth.consentAnd}{' '}
+              <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                {tr.auth.consentPrivacy}
+              </Link>
+            </span>
+          </label>
+        )}
 
         {error && (
           <div className="flex gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-600">
@@ -198,7 +234,11 @@ export default function AuthForm() {
           </div>
         )}
 
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        <button
+          type="submit"
+          disabled={loading || (tab === 'register' && !consent)}
+          className="btn-primary w-full"
+        >
           {loading ? tr.auth.wait : tab === 'login' ? tr.auth.login : tr.auth.createAccount}
         </button>
       </form>

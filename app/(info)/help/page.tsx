@@ -18,7 +18,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'У кого я покупаю и кто отвечает за заказ?',
         p: [
-          'У конкретного магазина — его название видно на карточке товара и в заказе. Магазин отвечает за качество, доставку и возврат. Если возник спор, платформа поможет связаться с продавцом и проследит за решением.',
+          'У конкретного магазина — его название видно на карточке товара и в заказе. Магазин отвечает за качество, доставку и возврат. Если возник спор, платформа выступает медиатором: передаёт претензию магазину в течение 24 часов и помогает договориться.',
         ],
       },
       {
@@ -42,19 +42,19 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Как записаться в салон?',
         p: [
-          'Откройте страницу салона, выберите услугу, дату и время. Подтверждение придёт в Telegram, запись видна в профиле. Отмена и перенос — по правилам салона, обычно бесплатно за 3 часа.',
+          'Откройте страницу салона, выберите услугу, дату и время. Салон подтвердит запись звонком или сообщением; запись видна в профиле. Отмена и перенос — по правилам салона.',
         ],
       },
       {
         h: 'Как работает карта лояльности?',
         p: [
-          'Баллы начисляются с каждого заказа у любого магазина площадки: от 1% (Bronze) до 5% (Platinum). 1 балл = 1 сум, оплачивайте баллами до 50% следующего заказа.',
+          'Баллы начисляются за каждый завершённый заказ у любого магазина площадки: от 1% (Bronze) до 5% (Platinum). 1 балл = 1 сум; баллами можно оплатить до 20% следующего заказа, баллы действуют 6 месяцев.',
         ],
       },
       {
         h: 'Как стать продавцом?',
         p: [
-          'Нажмите «Стать продавцом» в профиле, заполните карточку магазина и загрузите товары. Модерация — 1 рабочий день: проверяем документы и происхождение товара. Комиссия площадки фиксированная, без скрытых платежей.',
+          'Нажмите «Стать продавцом» в профиле, заполните карточку магазина и загрузите товары. Проверка — до 2 рабочих дней: смотрим документы и происхождение товара. Размещение бесплатно; платные тарифы с продвижением и аналитикой — по желанию продавца, без процента с продаж.',
         ],
       },
       {
@@ -100,19 +100,19 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Salonga qanday yozilaman?',
         p: [
-          "Salon sahifasini oching, xizmat, sana va vaqtni tanlang. Tasdiq Telegramga keladi, yozilish profilda ko'rinadi. Bekor qilish va ko'chirish — salon qoidalari bo'yicha, odatda 3 soat oldin bepul.",
+          "Salon sahifasini oching, xizmat, sana va vaqtni tanlang. Salon yozilishni qo'ng'iroq yoki xabar bilan tasdiqlaydi; yozilish profilda ko'rinadi. Bekor qilish va ko'chirish — salon qoidalari bo'yicha.",
         ],
       },
       {
         h: 'Sodiqlik kartasi qanday ishlaydi?',
         p: [
-          "Ballar platformadagi istalgan do'kondagi har bir buyurtmadan hisoblanadi: 1% (Bronze) dan 5% (Platinum) gacha. 1 ball = 1 so'm, keyingi buyurtmaning 50% gachasini ballar bilan to'lang.",
+          "Ballar platformadagi istalgan do'kondagi har bir yakunlangan buyurtma uchun hisoblanadi: 1% (Bronze) dan 5% (Platinum) gacha. 1 ball = 1 so'm; keyingi buyurtmaning 20% gachasini ballar bilan to'lash mumkin, ballar 6 oy amal qiladi.",
         ],
       },
       {
         h: "Qanday sotuvchi bo'laman?",
         p: [
-          "Profilda «Sotuvchi bo'lish»ni bosing, do'kon kartochkasini to'ldiring va mahsulotlarni yuklang. Moderatsiya — 1 ish kuni: hujjatlar va mahsulot kelib chiqishini tekshiramiz. Platforma komissiyasi qat'iy, yashirin to'lovlarsiz.",
+          "Profilda «Sotuvchi bo'lish»ni bosing, do'kon kartochkasini to'ldiring va mahsulotlarni yuklang. Tekshiruv — 2 ish kunigacha: hujjatlar va mahsulot kelib chiqishini ko'ramiz. Joylashtirish bepul; targ'ibot va tahlil bilan pullik tariflar — sotuvchi xohishiga ko'ra, sotuvdan foizsiz.",
         ],
       },
       {

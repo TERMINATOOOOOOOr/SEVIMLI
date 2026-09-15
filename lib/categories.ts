@@ -18,7 +18,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
   salons: 'Салоны и массаж',
   kids: 'Детские товары',
   home: 'Товары для дома',
-  pharmacy: 'Аптека',
+  pharmacy: 'Здоровье и гигиена',
   grocery: 'Продукты',
 }
 
@@ -29,7 +29,7 @@ export const CATEGORY_LABEL_UZ: Record<string, string> = {
   salons: 'Salonlar va massaj',
   kids: 'Bolalar mahsulotlari',
   home: 'Uy uchun mahsulotlar',
-  pharmacy: 'Dorixona',
+  pharmacy: 'Salomatlik va gigiyena',
   grocery: 'Oziq-ovqat',
 }
 

@@ -11,6 +11,8 @@ import PwaRegister from '@/components/pwa/PwaRegister'
 import MobileTabBar from '@/components/pwa/MobileTabBar'
 import InstallPrompt from '@/components/pwa/InstallPrompt'
 import { getLang } from '@/lib/lang-server'
+import { isSupabaseConfigured } from '@/lib/utils'
+import DemoBanner from '@/components/DemoBanner'
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -60,10 +62,13 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const lang = await getLang()
+  // Пока база не подключена (или включён флаг) — витрина честно помечена как демо.
+  const demo = process.env.NEXT_PUBLIC_DEMO_MODE === '1' || !isSupabaseConfigured()
   return (
     <html lang={lang} className={`${inter.variable} ${playfair.variable}`}>
       <body className="flex min-h-screen flex-col bg-white antialiased">
         <LangProvider lang={lang}>
+          {demo && <DemoBanner />}
           <PromoBar />
           <Navbar />
           <main className="flex-1">{children}</main>

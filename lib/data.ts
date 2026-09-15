@@ -317,6 +317,34 @@ export async function getCommunityPosts(limit = 3): Promise<CommunityPost[]> {
   }
 }
 
+// ---------- Ассистент ----------
+
+/** Категории, которые ассистент не рекомендует: никаких советов про лекарства и БАД. */
+const ASSISTANT_EXCLUDED = new Set(['pharmacy'])
+
+/**
+ * Каталог для заземления Севили. В боевом режиме — только активные товары из базы
+ * (без тихого фолбэка на демо: пустая база = пустой каталог, а не выдуманные товары).
+ */
+export async function getAssistantCatalog(limit = 150): Promise<Product[]> {
+  if (!isSupabaseConfigured()) {
+    return demoProducts.filter((p) => !ASSISTANT_EXCLUDED.has(p.category_slug ?? ''))
+  }
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, shop:shops(*)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error || !data) return []
+    return (data as Product[]).filter((p) => !ASSISTANT_EXCLUDED.has(p.category_slug ?? ''))
+  } catch {
+    return []
+  }
+}
+
 // ---------- Поиск ----------
 
 export async function search(q: string): Promise<{ products: Product[]; shops: Shop[] }> {

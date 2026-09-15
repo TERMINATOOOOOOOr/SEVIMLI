@@ -13,9 +13,12 @@ import Thumb from '@/components/ui/Thumb'
 export default function VerifyWidget({
   products,
   initialCode = '',
+  demo = false,
 }: {
   products: Product[]
   initialCode?: string
+  /** База не подключена — реестр демонстрационный, честно помечаем результат. */
+  demo?: boolean
 }) {
   const { lang, t } = useLang()
   const [code, setCode] = useState(initialCode)
@@ -71,12 +74,14 @@ export default function VerifyWidget({
         </button>
       </form>
 
-      <button
-        onClick={fillDemo}
-        className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-      >
-        <Sparkles size={14} /> {t.verify.tryDemo}
-      </button>
+      {demo && (
+        <button
+          onClick={fillDemo}
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <Sparkles size={14} /> {t.verify.tryDemo}
+        </button>
+      )}
 
       {/* Результат */}
       {result?.status === 'ok' && (
@@ -85,6 +90,7 @@ export default function VerifyWidget({
             <ShieldCheck size={20} /> {t.verify.okTitle}
           </p>
           <p className="mt-1 text-sm text-neutral-600">{t.verify.okText}</p>
+          {demo && <p className="mt-2 text-xs text-amber-700">{t.verify.demoNote}</p>}
 
           {okProduct && (
             <Link

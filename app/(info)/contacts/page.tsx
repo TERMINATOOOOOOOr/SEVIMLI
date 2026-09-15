@@ -12,17 +12,16 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Служба заботы о покупателях',
         p: [
-          '- Телефон: +998 78 000-00-00',
           '- Telegram: @sevimli_uz',
           '- E-mail: hello@sevimli.uz',
-          'Отвечаем в Telegram обычно в течение 15 минут в рабочее время.',
+          'Первый ответ в Telegram — в течение часа в рабочее время; претензии по заказу разбираем до 3 рабочих дней.',
         ],
       },
       {
         h: 'Продавцам и партнёрам',
         p: [
           '- E-mail: partners@sevimli.uz',
-          'Хотите продавать на SEVIMLI? Нажмите «Стать продавцом» на странице входа — модерация занимает 1 рабочий день.',
+          'Хотите продавать на SEVIMLI? Нажмите «Стать продавцом» на странице входа — проверка магазина занимает до 2 рабочих дней. Размещение бесплатно.',
         ],
       },
       {
@@ -38,17 +37,16 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: "Xaridorlar uchun g'amxo'rlik xizmati",
         p: [
-          '- Telefon: +998 78 000-00-00',
           '- Telegram: @sevimli_uz',
           '- E-mail: hello@sevimli.uz',
-          "Ish vaqtida Telegramda odatda 15 daqiqa ichida javob beramiz.",
+          "Telegramda birinchi javob — ish vaqtida bir soat ichida; buyurtma bo'yicha da'volarni 3 ish kunigacha ko'rib chiqamiz.",
         ],
       },
       {
         h: 'Sotuvchilar va hamkorlarga',
         p: [
           '- E-mail: partners@sevimli.uz',
-          "SEVIMLIda sotmoqchimisiz? Kirish sahifasida «Sotuvchi bo'lish» tugmasini bosing — moderatsiya 1 ish kuni davom etadi.",
+          "SEVIMLIda sotmoqchimisiz? Kirish sahifasida «Sotuvchi bo'lish» tugmasini bosing — do'kon tekshiruvi 2 ish kunigacha davom etadi. Joylashtirish bepul.",
         ],
       },
       {

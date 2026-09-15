@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ShieldCheck } from 'lucide-react'
 import { getOriginalProducts } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
+import { isSupabaseConfigured } from '@/lib/utils'
 import VerifyWidget from '@/components/VerifyWidget'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
@@ -30,7 +31,7 @@ export default async function VerifyPage({
       <p className="mt-3 text-neutral-600">{t.verify.subtitle}</p>
 
       <div className="mt-8">
-        <VerifyWidget products={products} initialCode={code ?? ''} />
+        <VerifyWidget products={products} initialCode={code ?? ''} demo={!isSupabaseConfigured()} />
       </div>
 
       <div className="mt-10 rounded-2xl border border-neutral-200 p-5">

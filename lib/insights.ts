@@ -178,8 +178,8 @@ export const VERIFY_CODES: VerifyRecord[] = [
     productId: pid,
     batch,
     importInfo: {
-      supplier: 'Seoul Beauty Co., Ltd — Сеул, Республика Корея',
-      declaration: `ГТД 26010/26/00${hashSeed(pid).toString().slice(0, 5)}`,
+      supplier: 'Демо-поставщик (пример записи реестра)',
+      declaration: 'Пример — в боевом реестре здесь номер документа поставщика',
       importedAt: '2026-06-28',
       expiresAt: '2028-06-01',
     },
@@ -199,6 +199,48 @@ export function verifyCode(input: string): VerifyResult {
 }
 
 // ---------- 4. Аналитика продавца ----------
+
+/** Боевая аналитика: считается только по фактическим заказам магазина. */
+function realAnalytics(orders: Order[], today: Date): SellerAnalytics {
+  const days: DayMetric[] = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const key = d.toDateString()
+    const dayOrders = orders.filter(
+      (o) => o.status !== 'cancelled' && new Date(o.created_at).toDateString() === key,
+    )
+    days.push({
+      date: d.toISOString().slice(0, 10),
+      revenue: dayOrders.reduce((s, o) => s + (o.total_price ?? 0), 0),
+      orders: dayOrders.length,
+      views: 0,
+    })
+  }
+  const revenue = days.reduce((s, d) => s + d.revenue, 0)
+  const ordersCount = days.reduce((s, d) => s + d.orders, 0)
+  const buyers = new Map<string, number>()
+  for (const o of orders) if (o.buyer_id) buyers.set(o.buyer_id, (buyers.get(o.buyer_id) ?? 0) + 1)
+  const repeat = [...buyers.values()].filter((n) => n > 1).length
+  const done = orders.filter((o) => o.status === 'done').length
+  return {
+    days,
+    totals: {
+      revenue,
+      orders: ordersCount,
+      views: 0,
+      conversion: 0,
+      avgCheck: ordersCount ? Math.round(revenue / ordersCount) : 0,
+      repeatShare: buyers.size ? repeat / buyers.size : 0,
+    },
+    funnel: [
+      { stage: { ru: 'Оформили заказ', uz: 'Buyurtma berdi' }, value: orders.length },
+      { stage: { ru: 'Выкупили', uz: 'Sotib oldi' }, value: done },
+    ],
+    topProducts: [],
+    citySplit: [],
+  }
+}
 
 export interface DayMetric {
   date: string
@@ -230,9 +272,15 @@ export function getSellerAnalytics(
   shopId: string,
   orders: Order[],
   products: Product[],
+  opts: { synthetic?: boolean } = {},
 ): SellerAnalytics {
+  // synthetic=false — боевой режим: только реальные заказы, никаких смоделированных
+  // просмотров и «фоновых» продаж (иначе продавец видит выдуманные цифры).
+  const synthetic = opts.synthetic ?? true
   const rnd = mulberry32(hashSeed(`analytics-${shopId}`))
   const today = new Date()
+
+  if (!synthetic) return realAnalytics(orders, today)
 
   const days: DayMetric[] = []
   for (let i = 29; i >= 0; i--) {
