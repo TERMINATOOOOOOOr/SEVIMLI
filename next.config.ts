@@ -39,9 +39,15 @@ const securityHeaders = [
   { key: 'Server', value: 'SEVIMLI' },
 ]
 
+/** Публичные документы (питч-дек) лежат в Supabase Storage, а не в репозитории. */
+const DOCS_BUCKET_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://sckcjhqwmgcvudnrvvlh.supabase.co'}/storage/v1/object/public/docs`
+
 const nextConfig: NextConfig = {
   // Убирает заголовок x-powered-by: Next.js
   poweredByHeader: false,
+  async redirects() {
+    return [{ source: '/docs/:file*', destination: `${DOCS_BUCKET_URL}/:file*`, permanent: false }]
+  },
   async headers() {
     return [
       {
