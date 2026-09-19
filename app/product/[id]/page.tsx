@@ -2,8 +2,17 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Store, ArrowRight, Truck, ShieldCheck } from 'lucide-react'
-import { getProductById, getReviewsForProduct, getRelatedProducts } from '@/lib/data'
+import {
+  getProductById,
+  getReviewsForProduct,
+  getRelatedProducts,
+  getQuestionsForProduct,
+  getPostsByProduct,
+  getViewer,
+  getMyLikedPostIds,
+} from '@/lib/data'
 import { getT } from '@/lib/lang-server'
+import { isSupabaseConfigured } from '@/lib/utils'
 import { productName, productDesc, cityName } from '@/lib/product-i18n'
 import { formatPriceLang, discountPercent } from '@/lib/format'
 import { categoryEmoji, categoryLabel } from '@/lib/categories'
@@ -37,10 +46,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const name = productName(product, lang)
   const description = productDesc(product, lang)
 
-  const [reviews, related] = await Promise.all([
+  const [reviews, related, questions, productPosts, viewer] = await Promise.all([
     getReviewsForProduct(product.id),
     getRelatedProducts(product, 4),
+    getQuestionsForProduct(product.id),
+    getPostsByProduct(product.id),
+    getViewer(),
   ])
+  const likedIds = viewer ? await getMyLikedPostIds(viewer.id, productPosts.map((p) => p.id)) : []
+  const live = isSupabaseConfigured() // демо: Q&A и обсуждения из localStorage, пропсы пустые
 
   const discount = discountPercent(product.price, product.old_price)
   const marketSaving = discountPercent(product.price, product.market_price)
@@ -167,10 +181,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </div>
 
       {/* Вопросы о товаре — спросить у продавца и сообщества */}
-      <ProductQA productId={product.id} />
+      <ProductQA productId={product.id} initialQuestions={live ? questions : []} viewer={viewer} />
 
       {/* Живые обсуждения из встроенного сообщества */}
-      <ProductPosts product={product} />
+      <ProductPosts product={product} initialPosts={live ? productPosts : []} initialLikedIds={likedIds} viewer={viewer} />
 
       {/* Отзывы */}
       <section className="mt-16">

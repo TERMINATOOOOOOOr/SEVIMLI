@@ -33,6 +33,12 @@ export interface PublicProfile {
   created_at: string
 }
 
+/** Текущий пользователь для клиентских компонентов сообщества (гейт, «мой лайк»). */
+export interface Viewer {
+  id: string
+  name: string | null
+}
+
 export type ShopPlan = 'free' | 'pro' | 'premium' | 'salon_pro'
 
 export interface Shop {
@@ -155,13 +161,19 @@ export type PostKind = 'review' | 'question' | 'tip'
 export interface PostComment {
   id: string
   post_id: string
+  author_id?: string | null
+  author?: PublicProfile | null
   author_name: string
   text: string
   created_at: string
+  /** Ключ демо-контента (cp1/cc1…) для UZ-переводов; у живого UGC нет. */
+  demo_key?: string | null
 }
 
 export interface CommunityPost {
   id: string
+  author_id?: string | null
+  author?: PublicProfile | null
   author_name: string
   author_city: string | null
   /** Аватар автора (путь к фото). Нет — рисуем букву. */
@@ -177,6 +189,12 @@ export interface CommunityPost {
   created_at: string
   comments: PostComment[]
   product?: Product | null
+  /** Скрыт по жалобам (видит только автор/админ). */
+  hidden?: boolean
+  /** Пост продавца или с промокодом — помечается «Реклама». */
+  is_ad?: boolean
+  reports_count?: number
+  demo_key?: string | null
 }
 
 // ---------- Вопросы о товаре (Q&A) ----------
@@ -184,20 +202,26 @@ export interface CommunityPost {
 export interface ProductAnswer {
   id: string
   question_id: string
+  author_id?: string | null
+  author?: PublicProfile | null
   author_name: string
   /** Ответ от магазина/эксперта — выделяется бейджем. */
   is_seller: boolean
   text: string
   created_at: string
+  demo_key?: string | null
 }
 
 export interface ProductQuestion {
   id: string
   product_id: string
+  author_id?: string | null
+  author?: PublicProfile | null
   author_name: string
   text: string
   created_at: string
   answers: ProductAnswer[]
+  demo_key?: string | null
 }
 
 // ---------- Лояльность ----------

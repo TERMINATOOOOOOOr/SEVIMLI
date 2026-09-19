@@ -6,9 +6,9 @@ import type { CommunityPost, PostKind, ProductQuestion } from '@/lib/types'
 import { demoPosts, demoQuestions } from '@/lib/demo'
 
 /**
- * Встроенная соц-медиа (демо-режим: хранится в localStorage).
- * При подключении Supabase переедет в community_posts / post_comments /
- * product_questions / product_answers (см. migrations/002_social_loyalty.sql).
+ * Встроенная соц-медиа — ДЕМО-реализация (isSupabaseConfigured() = false): localStorage.
+ * В боевом режиме компоненты читают данные с сервера (lib/data.ts) и пишут через
+ * lib/community-live.ts; этот стор в live не читается и не пишется.
  */
 
 function uid(prefix: string): string {

@@ -1,9 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { MessagesSquare, Clock, Flame } from 'lucide-react'
-import type { PostKind, Product } from '@/lib/types'
+import type { CommunityPost, PostKind, Product, Viewer } from '@/lib/types'
 import { useCommunity, tagsOf } from '@/store/community'
+import { COMMUNITY_LIVE } from '@/lib/community-live'
+import { useLivePosts } from '@/lib/community-hooks'
 import { useHasMounted } from '@/lib/hooks'
 import { useLang } from '@/components/LangProvider'
 import { tagLabel } from '@/lib/community-i18n'
@@ -14,10 +17,22 @@ import PostComposer from '@/components/community/PostComposer'
 type Filter = 'all' | PostKind
 type Sort = 'new' | 'popular'
 
-export default function CommunityFeed({ products }: { products: Product[] }) {
+interface Props {
+  products: Product[]
+  /** Боевой режим: страница ленты с сервера (в демо игнорируется — данные из стора). */
+  initialPosts: CommunityPost[]
+  initialLikedIds: string[]
+  viewer: Viewer | null
+  page: number
+  hasMore: boolean
+}
+
+export default function CommunityFeed({ products, initialPosts, initialLikedIds, viewer, page, hasMore }: Props) {
   const mounted = useHasMounted()
   const { lang, t } = useLang()
-  const posts = useCommunity((s) => s.posts)
+  const storePosts = useCommunity((s) => s.posts)
+  const live = useLivePosts({ initialPosts, initialLikedIds, viewer })
+  const posts = COMMUNITY_LIVE ? live.posts : storePosts
   const tags = useMemo(() => tagsOf(posts), [posts])
 
   const [filter, setFilter] = useState<Filter>('all')
@@ -48,8 +63,9 @@ export default function CommunityFeed({ products }: { products: Product[] }) {
     )
   }, [posts, filter, tag, sort])
 
-  // Пока не смонтировались — не рендерим данные из localStorage (защита от hydration mismatch)
-  if (!mounted) {
+  // Демо: до монтирования не рендерим данные из localStorage (защита от hydration mismatch).
+  // Live: лента приходит с сервера — рендерится сразу (SEO, «пусто = пусто»).
+  if (!COMMUNITY_LIVE && !mounted) {
     return (
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -59,10 +75,17 @@ export default function CommunityFeed({ products }: { products: Product[] }) {
     )
   }
 
+  const liveActions = COMMUNITY_LIVE ? live.actions : undefined
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_260px]">
       <div className="space-y-5">
-        <PostComposer products={products} />
+        <PostComposer
+          products={products}
+          viewer={viewer}
+          onCreated={live.prepend}
+          requireAuth={live.actions.requireAuth}
+        />
 
         {/* Фильтры по типу + сортировка */}
         <div className="flex flex-wrap items-center gap-1.5">
@@ -121,9 +144,31 @@ export default function CommunityFeed({ products }: { products: Product[] }) {
             <PostCard
               key={post.id}
               post={post}
-              product={post.product_id ? (productById.get(post.product_id) ?? null) : null}
+              product={post.product ?? (post.product_id ? (productById.get(post.product_id) ?? null) : null)}
+              live={liveActions}
             />
           ))
+        )}
+
+        {/* Страничная навигация (только live) */}
+        {COMMUNITY_LIVE && (page > 1 || hasMore) && (
+          <div className="flex items-center justify-between gap-3">
+            {page > 1 ? (
+              <Link
+                href={page === 2 ? '/community' : `/community?page=${page - 1}`}
+                className="btn-outline !py-2 text-sm"
+              >
+                {t.community.prevPage}
+              </Link>
+            ) : (
+              <span />
+            )}
+            {hasMore && (
+              <Link href={`/community?page=${page + 1}`} className="btn-outline !py-2 text-sm">
+                {t.community.loadMore} →
+              </Link>
+            )}
+          </div>
         )}
       </div>
 

@@ -3,16 +3,34 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { MessagesSquare } from 'lucide-react'
-import type { Product } from '@/lib/types'
+import type { CommunityPost, Product, Viewer } from '@/lib/types'
 import { useCommunity } from '@/store/community'
+import { COMMUNITY_LIVE } from '@/lib/community-live'
+import { useLivePosts } from '@/lib/community-hooks'
 import { useHasMounted } from '@/lib/hooks'
 import { useLang } from '@/components/LangProvider'
 import PostCard from '@/components/community/PostCard'
 
-export default function PostDetail({ postId, products }: { postId: string; products: Product[] }) {
+interface Props {
+  postId: string
+  products: Product[]
+  /** Боевой режим: пост и срез ленты для «похожих» — с сервера. */
+  initialPost: CommunityPost | null
+  initialPosts: CommunityPost[]
+  initialLikedIds: string[]
+  viewer: Viewer | null
+}
+
+export default function PostDetail({ postId, products, initialPost, initialPosts, initialLikedIds, viewer }: Props) {
   const mounted = useHasMounted()
   const { t } = useLang()
-  const posts = useCommunity((s) => s.posts)
+  const storePosts = useCommunity((s) => s.posts)
+  const live = useLivePosts({
+    initialPosts: initialPost ? [initialPost, ...initialPosts.filter((p) => p.id !== initialPost.id)] : initialPosts,
+    initialLikedIds,
+    viewer,
+  })
+  const posts = COMMUNITY_LIVE ? live.posts : storePosts
 
   const post = useMemo(() => posts.find((p) => p.id === postId) ?? null, [posts, postId])
 
@@ -29,7 +47,7 @@ export default function PostDetail({ postId, products }: { postId: string; produ
     return map
   }, [products])
 
-  if (!mounted) {
+  if (!COMMUNITY_LIVE && !mounted) {
     return <div className="h-72 animate-pulse rounded-2xl bg-neutral-100" />
   }
 
@@ -45,24 +63,20 @@ export default function PostDetail({ postId, products }: { postId: string; produ
     )
   }
 
+  const liveActions = COMMUNITY_LIVE ? live.actions : undefined
+  const productOf = (p: CommunityPost) =>
+    p.product ?? (p.product_id ? (productById.get(p.product_id) ?? null) : null)
+
   return (
     <div className="space-y-8">
-      <PostCard
-        post={post}
-        product={post.product_id ? (productById.get(post.product_id) ?? null) : null}
-        detail
-      />
+      <PostCard post={post} product={productOf(post)} live={liveActions} detail />
 
       {related.length > 0 && (
         <section>
           <h2 className="mb-4 text-lg font-semibold text-neutral-900">{t.community.relatedPosts}</h2>
           <div className="space-y-5">
             {related.map((p) => (
-              <PostCard
-                key={p.id}
-                post={p}
-                product={p.product_id ? (productById.get(p.product_id) ?? null) : null}
-              />
+              <PostCard key={p.id} post={p} product={productOf(p)} live={liveActions} />
             ))}
           </div>
         </section>

@@ -1,6 +1,9 @@
 import type { Lang } from '@/lib/i18n'
 import type { CommunityPost, PostComment, ProductQuestion, ProductAnswer, Review } from '@/lib/types'
 
+/** В демо ключ = id (cp1…), у демо-сида в базе — колонка demo_key, у живого UGC — ничего. */
+const key = (x: { id: string; demo_key?: string | null }) => x.demo_key ?? x.id
+
 /**
  * Узбекские версии демо-контента сообщества (посты, комментарии, Q&A, отзывы).
  * Пользовательский контент (созданный в демо через композер) не переводится —
@@ -98,23 +101,23 @@ const NAME_UZ: Record<string, string> = {
 }
 
 /** Текст поста на текущем языке (UGC остаётся как написан). */
-export function postText(post: Pick<CommunityPost, 'id' | 'text'>, lang: Lang): string {
-  return lang === 'uz' ? (POST_UZ[post.id] ?? post.text) : post.text
+export function postText(post: Pick<CommunityPost, 'id' | 'text' | 'demo_key'>, lang: Lang): string {
+  return lang === 'uz' ? (POST_UZ[key(post)] ?? post.text) : post.text
 }
 
 /** Текст комментария на текущем языке. */
-export function commentText(c: Pick<PostComment, 'id' | 'text'>, lang: Lang): string {
-  return lang === 'uz' ? (COMMENT_UZ[c.id] ?? c.text) : c.text
+export function commentText(c: Pick<PostComment, 'id' | 'text' | 'demo_key'>, lang: Lang): string {
+  return lang === 'uz' ? (COMMENT_UZ[key(c)] ?? c.text) : c.text
 }
 
 /** Текст вопроса о товаре. */
-export function questionText(q: Pick<ProductQuestion, 'id' | 'text'>, lang: Lang): string {
-  return lang === 'uz' ? (QUESTION_UZ[q.id] ?? q.text) : q.text
+export function questionText(q: Pick<ProductQuestion, 'id' | 'text' | 'demo_key'>, lang: Lang): string {
+  return lang === 'uz' ? (QUESTION_UZ[key(q)] ?? q.text) : q.text
 }
 
 /** Текст ответа на вопрос. */
-export function answerText(a: Pick<ProductAnswer, 'id' | 'text'>, lang: Lang): string {
-  return lang === 'uz' ? (ANSWER_UZ[a.id] ?? a.text) : a.text
+export function answerText(a: Pick<ProductAnswer, 'id' | 'text' | 'demo_key'>, lang: Lang): string {
+  return lang === 'uz' ? (ANSWER_UZ[key(a)] ?? a.text) : a.text
 }
 
 /** Текст отзыва. */

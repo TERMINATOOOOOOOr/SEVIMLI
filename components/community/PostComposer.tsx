@@ -2,15 +2,19 @@
 
 import { useRef, useState } from 'react'
 import { Sparkles, ImagePlus, X } from 'lucide-react'
-import type { PostKind, Product } from '@/lib/types'
+import type { CommunityPost, PostKind, Product, Viewer } from '@/lib/types'
 import { useCommunity } from '@/store/community'
+import { COMMUNITY_LIVE, createPost, uploadPostImage, removePostImages, mapError } from '@/lib/community-live'
 import { useLang } from '@/components/LangProvider'
 import { productName } from '@/lib/product-i18n'
 import { cn } from '@/lib/utils'
+import LoginCta from '@/components/community/LoginCta'
 
 const MAX_IMAGES = 2
+const MAX_TEXT = 2000
+const LIVE_TYPES = /^image\/(jpeg|png|webp)$/
 
-/** Файл → сжатый dataURL (длинная сторона 900px), чтобы не раздувать localStorage. */
+/** Файл → сжатый dataURL (длинная сторона 900px): превью, а в демо — и хранилище. */
 function fileToDataUrl(file: File, maxSide = 900): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -32,7 +36,15 @@ function fileToDataUrl(file: File, maxSide = 900): Promise<string> {
   })
 }
 
-export default function PostComposer({ products }: { products: Product[] }) {
+interface Props {
+  products: Product[]
+  /** Боевой режим: текущий пользователь (null = гость → плашка входа). */
+  viewer?: Viewer | null
+  onCreated?: (post: CommunityPost) => void
+  requireAuth?: () => boolean
+}
+
+export default function PostComposer({ products, viewer = null, onCreated, requireAuth }: Props) {
   const { lang, t } = useLang()
   const addPost = useCommunity((s) => s.addPost)
   const authorName = useCommunity((s) => s.authorName)
@@ -44,7 +56,12 @@ export default function PostComposer({ products }: { products: Product[] }) {
   const [productId, setProductId] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [sent, setSent] = useState(false)
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'publishing'>('idle')
+  const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Все хуки выше — ранний return только после них (rules-of-hooks)
+  if (COMMUNITY_LIVE && !viewer) return <LoginCta text={t.community.loginToWrite} />
 
   const KINDS: { id: PostKind; label: string }[] = [
     { id: 'review', label: t.community.kindReview },
@@ -59,12 +76,13 @@ export default function PostComposer({ products }: { products: Product[] }) {
   }
 
   async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    // accept="image/*" — лишь подсказка UI; отсеиваем не-картинки явно
+    // accept — лишь подсказка UI; отсеиваем не-картинки явно
     // (плюс canvas-реэнкод ниже гарантирует чистый JPEG без чужих payload'ов)
-    const files = Array.from(e.target.files ?? [])
-      .filter((f) => f.type.startsWith('image/'))
-      .slice(0, MAX_IMAGES - images.length)
+    const picked = Array.from(e.target.files ?? [])
     e.target.value = ''
+    const isOk = (f: File) => (COMMUNITY_LIVE ? LIVE_TYPES.test(f.type) : f.type.startsWith('image/'))
+    if (COMMUNITY_LIVE && picked.some((f) => !isOk(f))) setError(t.composer.photoBadType)
+    const files = picked.filter(isOk).slice(0, MAX_IMAGES - images.length)
     for (const f of files) {
       try {
         const dataUrl = await fileToDataUrl(f)
@@ -75,21 +93,15 @@ export default function PostComposer({ products }: { products: Product[] }) {
     }
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
-    const value = text.trim()
-    if (!value) return
-    addPost({
-      kind,
-      text: value,
-      tags: tags
-        .split(/[,\s]+/)
-        .map((tg) => tg.replace(/^#/, '').trim().toLowerCase())
-        .filter(Boolean)
-        .slice(0, 5),
-      product_id: productId || null,
-      images,
-    })
+  function parseTags(): string[] {
+    return tags
+      .split(/[,\s]+/)
+      .map((tg) => tg.replace(/^#/, '').trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 5)
+  }
+
+  function resetForm() {
     setText('')
     setTags('')
     setProductId('')
@@ -97,6 +109,46 @@ export default function PostComposer({ products }: { products: Product[] }) {
     setSent(true)
     setTimeout(() => setSent(false), 2500)
   }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const value = text.trim()
+    if (!value) return
+    setError(null)
+
+    if (!COMMUNITY_LIVE) {
+      addPost({ kind, text: value, tags: parseTags(), product_id: productId || null, images })
+      resetForm()
+      return
+    }
+
+    if (!viewer || (requireAuth && !requireAuth())) return
+    const urls: string[] = []
+    try {
+      setStage('uploading')
+      for (const d of images) urls.push(await uploadPostImage(d, viewer.id))
+      setStage('publishing')
+      const post = await createPost(
+        { kind, text: value, tags: parseTags(), product_id: productId || null, images: urls },
+        viewer.id,
+      )
+      onCreated?.(post)
+      resetForm()
+    } catch (err) {
+      // Пост не сохранился (лимит, ограничение, сеть) — уже загруженные фото не оставляем сиротами
+      void removePostImages(urls)
+      const ce = mapError(err, 'post')
+      if (ce.code === 'limit') setError(t.composer.postLimit)
+      else if (ce.code === 'too_big') setError(t.composer.photoTooBig)
+      else if (ce.code === 'bad_type') setError(t.composer.photoBadType)
+      else if (ce.code === 'auth') requireAuth?.()
+      else setError(t.community.actionFailed)
+    } finally {
+      setStage('idle')
+    }
+  }
+
+  const busy = stage !== 'idle'
 
   return (
     <form onSubmit={submit} className="rounded-2xl border border-neutral-200 bg-white p-5">
@@ -128,6 +180,7 @@ export default function PostComposer({ products }: { products: Product[] }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
+        maxLength={MAX_TEXT}
         placeholder={PLACEHOLDER[kind]}
         className="input mt-4 resize-none"
       />
@@ -153,14 +206,21 @@ export default function PostComposer({ products }: { products: Product[] }) {
       )}
 
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-neutral-600">{t.composer.yourName}</label>
-          <input
-            value={authorName}
-            onChange={(e) => setAuthorName(e.target.value)}
-            className="input !py-2 text-sm"
-          />
-        </div>
+        {COMMUNITY_LIVE ? (
+          <p className="flex items-end pb-2 text-xs text-neutral-500">
+            {t.composer.postingAs}
+            <span className="ml-1 font-medium text-neutral-800">{viewer?.name ?? '…'}</span>
+          </p>
+        ) : (
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-neutral-600">{t.composer.yourName}</label>
+            <input
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className="input !py-2 text-sm"
+            />
+          </div>
+        )}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-neutral-600">{t.composer.tags}</label>
           <input
@@ -187,14 +247,18 @@ export default function PostComposer({ products }: { products: Product[] }) {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <button type="submit" disabled={!text.trim()} className="btn-primary !py-2.5 text-sm">
-          {t.composer.publish}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={!text.trim() || busy} className="btn-primary !py-2.5 text-sm">
+          {stage === 'uploading'
+            ? t.composer.uploading
+            : stage === 'publishing'
+              ? t.composer.publishing
+              : t.composer.publish}
         </button>
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          disabled={images.length >= MAX_IMAGES}
+          disabled={images.length >= MAX_IMAGES || busy}
           className="flex items-center gap-1.5 rounded-full bg-neutral-100 px-4 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-200 disabled:opacity-40"
         >
           <ImagePlus size={16} />
@@ -203,13 +267,19 @@ export default function PostComposer({ products }: { products: Product[] }) {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept={COMMUNITY_LIVE ? 'image/jpeg,image/png,image/webp' : 'image/*'}
           multiple
           onChange={onPickFiles}
           className="hidden"
         />
         {sent && <span className="text-sm text-secondary">{t.composer.published}</span>}
       </div>
+      {COMMUNITY_LIVE && (
+        <p className="mt-2 text-xs text-neutral-400">
+          {t.composer.photoHint} · {t.composer.adNotice}
+        </p>
+      )}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </form>
   )
 }

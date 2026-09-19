@@ -3,23 +3,35 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { MessagesSquare, ArrowRight } from 'lucide-react'
-import type { Product } from '@/lib/types'
+import type { CommunityPost, Product, Viewer } from '@/lib/types'
 import { useCommunity, postsByProduct } from '@/store/community'
+import { COMMUNITY_LIVE } from '@/lib/community-live'
+import { useLivePosts } from '@/lib/community-hooks'
 import { useHasMounted } from '@/lib/hooks'
 import { useLang } from '@/components/LangProvider'
 import PostCard from '@/components/community/PostCard'
+
+interface Props {
+  product: Product
+  /** Боевой режим: обсуждения товара с сервера (в демо игнорируются). */
+  initialPosts: CommunityPost[]
+  initialLikedIds: string[]
+  viewer: Viewer | null
+}
 
 /**
  * Живые обсуждения этого товара из встроенного сообщества.
  * Это и есть связка «соц-медиа → карточка товара»: реальный опыт рядом с кнопкой покупки.
  */
-export default function ProductPosts({ product }: { product: Product }) {
+export default function ProductPosts({ product, initialPosts, initialLikedIds, viewer }: Props) {
   const mounted = useHasMounted()
   const { t } = useLang()
   const allPosts = useCommunity((s) => s.posts)
-  const posts = useMemo(() => postsByProduct(allPosts, product.id), [allPosts, product.id])
+  const storePosts = useMemo(() => postsByProduct(allPosts, product.id), [allPosts, product.id])
+  const live = useLivePosts({ initialPosts, initialLikedIds, viewer })
+  const posts = COMMUNITY_LIVE ? live.posts : storePosts
 
-  if (!mounted) {
+  if (!COMMUNITY_LIVE && !mounted) {
     return <div className="mt-16 h-40 animate-pulse rounded-2xl bg-neutral-100" />
   }
 
@@ -48,7 +60,7 @@ export default function ProductPosts({ product }: { product: Product }) {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} product={product} />
+            <PostCard key={post.id} post={post} product={product} live={COMMUNITY_LIVE ? live.actions : undefined} />
           ))}
         </div>
       )}

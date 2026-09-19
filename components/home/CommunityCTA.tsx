@@ -51,15 +51,15 @@ export default async function CommunityCTA() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={p.author_avatar}
-                      alt={p.author_name}
+                      alt={p.author?.name || p.author_name}
                       className="h-8 w-8 rounded-full object-cover"
                     />
                   ) : (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-sm font-semibold text-primary">
-                      {personName(p.author_name, lang).charAt(0).toUpperCase()}
+                      {personName(p.author?.name || p.author_name, lang).charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm font-medium text-neutral-800">{personName(p.author_name, lang)}</span>
+                  <span className="text-sm font-medium text-neutral-800">{personName(p.author?.name || p.author_name, lang)}</span>
                   <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
                     {kindLabel[p.kind] ?? p.kind}
                   </span>
@@ -73,7 +73,7 @@ export default async function CommunityCTA() {
                     <Heart size={13} /> {p.likes}
                   </span>
                   <span className="flex items-center gap-1">
-                    <MessageCircle size={13} /> {p.comments?.length ?? 0}
+                    <MessageCircle size={13} /> {p.comments.length}
                   </span>
                 </div>
               </Link>

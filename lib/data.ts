@@ -1,15 +1,34 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/utils'
+import {
+  POST_WITH_ALL,
+  QUESTION_WITH_ANSWERS,
+  isUuid,
+  normalizePost,
+  normalizeQuestion,
+} from '@/lib/community-select'
 import {
   demoCategories,
   demoShops,
   demoProducts,
   demoReviews,
   demoPosts,
+  demoQuestions,
   demoOrders,
   demoBookings,
 } from '@/lib/demo'
-import type { Category, Shop, Product, Review, CommunityPost, Order, Booking } from '@/lib/types'
+import type {
+  Category,
+  Shop,
+  Product,
+  Review,
+  CommunityPost,
+  ProductQuestion,
+  Viewer,
+  Order,
+  Booking,
+} from '@/lib/types'
 
 /**
  * Слой доступа к данным для серверных компонентов.
@@ -340,17 +359,141 @@ export async function getBookingsByShop(shopId: string): Promise<Booking[]> {
 // ---------- Сообщество ----------
 
 /** Последние посты сообщества (для тизера на главной). */
+/** Тизер на главной: свежие посты с автором, комментариями и товаром. */
 export async function getCommunityPosts(limit = 3): Promise<CommunityPost[]> {
   if (!isSupabaseConfigured()) return demoPosts.slice(0, limit)
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('community_posts')
-      .select('*')
+      .select(POST_WITH_ALL)
+      .eq('hidden', false)
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error) return []
-    return ((data as CommunityPost[]) ?? []).map((p) => ({ ...p, comments: p.comments ?? [] }))
+    return (data ?? []).map(normalizePost)
+  } catch {
+    return []
+  }
+}
+
+export const FEED_PAGE = 50
+
+/**
+ * Лента сообщества: не скрытые, новые сверху, страницами.
+ * Фильтры по типу/тегу и сортировка «популярные» — на клиенте над загруженной страницей.
+ */
+export async function getCommunityFeed(
+  page = 1,
+  limit = FEED_PAGE,
+): Promise<{ posts: CommunityPost[]; hasMore: boolean }> {
+  if (!isSupabaseConfigured()) return { posts: demoPosts, hasMore: false }
+  try {
+    const supabase = await createClient()
+    const from = (Math.max(1, Math.floor(page) || 1) - 1) * limit
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select(POST_WITH_ALL)
+      .eq('hidden', false) // дубль RLS posts_read (см. шапку 007)
+      .order('created_at', { ascending: false })
+      .range(from, from + limit) // limit+1 строка → hasMore
+    if (error) return { posts: [], hasMore: false }
+    const rows = (data ?? []).map(normalizePost)
+    return { posts: rows.slice(0, limit), hasMore: rows.length > limit }
+  } catch {
+    return { posts: [], hasMore: false }
+  }
+}
+
+/**
+ * Один пост (страница + generateMetadata → cache(): один запрос на рендер).
+ * hidden не фильтруем: автор/админ видят свой скрытый пост по RLS.
+ */
+export const getCommunityPost = cache(async (id: string): Promise<CommunityPost | null> => {
+  if (!isSupabaseConfigured()) return demoPosts.find((p) => p.id === id) ?? null
+  if (!isUuid(id)) return null
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select(POST_WITH_ALL)
+      .eq('id', id)
+      .maybeSingle()
+    if (error || !data) return null
+    return normalizePost(data)
+  } catch {
+    return null
+  }
+})
+
+/** Обсуждения товара из сообщества (карточка товара). */
+export async function getPostsByProduct(productId: string): Promise<CommunityPost[]> {
+  if (!isSupabaseConfigured()) return demoPosts.filter((p) => p.product_id === productId)
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select(POST_WITH_ALL)
+      .eq('product_id', productId)
+      .eq('hidden', false)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (error) return []
+    return (data ?? []).map(normalizePost)
+  } catch {
+    return []
+  }
+}
+
+/** Вопросы о товаре с ответами. */
+export async function getQuestionsForProduct(productId: string): Promise<ProductQuestion[]> {
+  if (!isSupabaseConfigured()) return demoQuestions.filter((q) => q.product_id === productId)
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('product_questions')
+      .select(QUESTION_WITH_ANSWERS)
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (error) return []
+    return (data ?? []).map(normalizeQuestion)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Текущий пользователь для гейта и «моего лайка». Демо → null (в демо гейта нет).
+ * Имя — из profiles (его же штампует триггер); пустое имя → null.
+ */
+export const getViewer = cache(async (): Promise<Viewer | null> => {
+  if (!isSupabaseConfigured()) return null
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return null
+    const { data: p } = await supabase.from('profiles').select('name').eq('id', user.id).maybeSingle()
+    return { id: user.id, name: p?.name || null }
+  } catch {
+    return null
+  }
+})
+
+/** id постов из списка, которые лайкнул пользователь (post_likes_read: using(true)). */
+export async function getMyLikedPostIds(userId: string, postIds: string[]): Promise<string[]> {
+  if (!isSupabaseConfigured() || postIds.length === 0) return []
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', userId)
+      .in('post_id', postIds)
+    if (error) return []
+    return (data ?? []).map((r: { post_id: string }) => r.post_id)
   } catch {
     return []
   }
