@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingCart, CalendarClock, Store, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, CalendarClock, Store, BarChart3, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
@@ -11,6 +11,7 @@ const links = [
   { href: '/seller/products', label: 'Мои товары', icon: Package },
   { href: '/seller/orders', label: 'Заказы', icon: ShoppingCart },
   { href: '/seller/bookings', label: 'Записи', icon: CalendarClock },
+  { href: '/seller/codes', label: 'Коды подлинности', icon: ShieldCheck },
   { href: '/seller/shop', label: 'Настройки магазина', icon: Store },
 ]
 

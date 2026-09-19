@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, ShoppingBag, Trash2, Plus, Minus, Truck, Gift, Store, MapPin, Users } from 'lucide-react'
@@ -46,7 +46,10 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart } = useCart()
   const subtotal = useCart(selectTotalPrice)
   const circle = useCart((s) => s.circle)
-  const points = useLoyalty((s) => s.points)
+  const storePoints = useLoyalty((s) => s.points)
+  /** Боевой режим: уровень кешбэка зависит от серверных баллов. */
+  const [livePoints, setLivePoints] = useState<number | null>(null)
+  const points = isSupabaseConfigured() ? (livePoints ?? 0) : storePoints
   const addPoints = useLoyalty((s) => s.addPoints)
 
   const [name, setName] = useState('')
@@ -61,6 +64,20 @@ export default function CartPage() {
   const [earned, setEarned] = useState(0)
   /** Скидка круга, которую реально применил сервер (create_order). */
   const [serverDiscount, setServerDiscount] = useState(0)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return
+    let cancelled = false
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return
+      const { data: p } = await supabase.from('profiles').select('loyalty_points').eq('id', data.user.id).maybeSingle()
+      if (!cancelled) setLivePoints(Number(p?.loyalty_points ?? 0))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Корзина дробится по магазинам: один заказ — один магазин, доставка считается на каждый.
   const groups = useMemo<ShopGroup[]>(() => {

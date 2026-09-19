@@ -13,6 +13,7 @@ import InstallPrompt from '@/components/pwa/InstallPrompt'
 import { getLang } from '@/lib/lang-server'
 import { isSupabaseConfigured } from '@/lib/utils'
 import DemoBanner from '@/components/DemoBanner'
+import { SITE_URL } from '@/lib/site'
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -28,6 +29,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'SEVIMLI — экосистема для женщин Узбекистана',
     template: '%s · SEVIMLI',

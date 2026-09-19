@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { isSupabaseConfigured } from '@/lib/utils'
 
 /** API-эндпоинты авторизации (любой метод) и POST на страницы входа. */
 const API_AUTH = /^\/api\/(auth|login|signin|signup)(\/|$)/i
@@ -19,6 +20,11 @@ export async function middleware(request: NextRequest) {
 
   // Настоящий 404 (а не 200 со стримом not-found из-за loading.tsx)
   if (!COURIER_DEMO && /^\/courier(\/|$)/.test(path)) {
+    return NextResponse.rewrite(new URL('/__hidden__', request.url), { status: 404 })
+  }
+
+  // Админка существует только с живой базой; в демо-режиме — честный 404 (в live роль проверяет updateSession)
+  if (!isSupabaseConfigured() && /^\/admin(\/|$)/.test(path)) {
     return NextResponse.rewrite(new URL('/__hidden__', request.url), { status: 404 })
   }
 

@@ -1,17 +1,18 @@
 import type { Metadata } from 'next'
 import { Bot } from 'lucide-react'
-import { getAssistantCatalog } from '@/lib/data'
+import { getAssistantCatalog, getMyAssistantChats, getViewer } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
 import AssistantChat from '@/components/assistant/AssistantChat'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 
 export const metadata: Metadata = { title: 'Севиля — подбор ухода · Sevilya' }
+export const dynamic = 'force-dynamic'
 
 export default async function AssistantPage() {
   const { t } = await getT()
   // Тот же каталог, что видит Севиля на сервере: маркеры карточек [[p:<id>]] в ответах всегда находят товар
-  const products = await getAssistantCatalog(150)
+  const [products, viewer, chats] = await Promise.all([getAssistantCatalog(150), getViewer(), getMyAssistantChats()])
 
   return (
     <div className="relative isolate mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -28,7 +29,7 @@ export default async function AssistantPage() {
         <p className="mt-1 text-xs text-neutral-400">{t.assistant.aiNote}</p>
       </header>
 
-      <AssistantChat products={products} />
+      <AssistantChat products={products} viewer={viewer} initialChats={chats} />
 
       <p className="mt-4 text-xs leading-relaxed text-neutral-400">{t.assistant.disclaimer}</p>
     </div>

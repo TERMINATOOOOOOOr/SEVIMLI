@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles, Barcode } from 'lucide-react'
 import { useLoyalty } from '@/store/loyalty'
+import { isSupabaseConfigured } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { useHasMounted } from '@/lib/hooks'
 import { tierOf, nextTierOf, tierProgress } from '@/lib/loyalty'
 import { formatPointsLang } from '@/lib/format'
@@ -48,12 +50,25 @@ function BarcodeSvg({ code }: { code: string }) {
   )
 }
 
-export default function LoyaltyCard({ className }: { className?: string }) {
+interface ServerLoyalty {
+  points: number
+  cardNo: string | null
+}
+
+/**
+ * Карта лояльности. Демо — баллы и номер из localStorage; боевой режим — с сервера (проп server):
+ * баллы начисляет complete_order, номер карты выдаёт ensure_loyalty_card(). server = null → гость.
+ */
+export default function LoyaltyCard({ className, server }: { className?: string; server?: ServerLoyalty | null }) {
   const mounted = useHasMounted()
   const { lang, t } = useLang()
-  const points = useLoyalty((s) => s.points)
-  const cardNo = useLoyalty((s) => s.cardNo)
+  const storePoints = useLoyalty((s) => s.points)
+  const storeCardNo = useLoyalty((s) => s.cardNo)
   const ensureCard = useLoyalty((s) => s.ensureCard)
+  const live = isSupabaseConfigured()
+  const [issuedNo, setIssuedNo] = useState<string | null>(null)
+  const points = live ? (server?.points ?? 0) : storePoints
+  const cardNo = live ? (server?.cardNo ?? issuedNo) : storeCardNo
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -68,9 +83,24 @@ export default function LoyaltyCard({ className }: { className?: string }) {
     driven: false, flip: 0, flipCur: 0, raf: 0,
   })
 
+  // Зависимости — примитивы: объект server создаётся родителем заново на каждом рендере,
+  // и эффект с ним в зависимостях дёргал бы RPC снова и снова
+  const needCard = live && Boolean(server) && !server?.cardNo
+  const requested = useRef(false)
   useEffect(() => {
-    ensureCard()
-  }, [ensureCard])
+    if (!live) {
+      ensureCard()
+      return
+    }
+    // Боевой режим: номер карты выдаёт сервер, один запрос на монтирование
+    if (!needCard || requested.current) return
+    requested.current = true
+    createClient()
+      .rpc('ensure_loyalty_card')
+      .then(({ data }) => {
+        if (typeof data === 'string') setIssuedNo(data)
+      })
+  }, [live, needCard, ensureCard])
 
   // Настройки среды: reduced-motion (с подпиской на смену), тач, iOS-гироскоп
   useEffect(() => {

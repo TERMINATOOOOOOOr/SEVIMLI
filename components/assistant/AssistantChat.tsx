@@ -16,7 +16,7 @@ import {
   X,
   PanelLeft,
 } from 'lucide-react'
-import type { Product } from '@/lib/types'
+import type { Product, Viewer } from '@/lib/types'
 import {
   SKIN_OPTIONS,
   CONCERN_OPTIONS,
@@ -38,6 +38,8 @@ import Thumb from '@/components/ui/Thumb'
 import { useSession } from '@/store/session'
 import { loadChats, saveChats, type Conversation } from '@/lib/assistant-storage'
 import { splitCards, stripCards } from '@/lib/assistant-markers'
+import { ASSISTANT_LIVE, saveChatsLive, rememberLoaded } from '@/lib/assistant-live'
+import type { StoredConversation } from '@/lib/data'
 
 interface Chip {
   id: string
@@ -191,12 +193,28 @@ function ProductChip({ p, added, onAdd }: { p: Product; added: boolean; onAdd: (
   )
 }
 
-export default function AssistantChat({ products }: { products: Product[] }) {
+interface ChatProps {
+  products: Product[]
+  /** Боевой режим: текущий пользователь и его диалоги из базы (assistant_conversations). */
+  viewer?: Viewer | null
+  initialChats?: StoredConversation[] | null
+}
+
+export default function AssistantChat({ products, viewer = null, initialChats = null }: ChatProps) {
   const { lang, t } = useLang()
   const addItem = useCart((s) => s.addItem)
   const user = useSession((s) => s.user)
-  const email = user?.email ?? null
-  const loggedIn = !!user
+  // Кто «залогинен»: в боевом режиме — пользователь Supabase (история в базе), в демо — демо-сессия (localStorage)
+  const email = ASSISTANT_LIVE ? (viewer?.id ?? null) : (user?.email ?? null)
+  const loggedIn = !!email
+  /** Единая точка сохранения истории. */
+  const persist = (store: { list: Conversation<Message>[]; activeId: string }) => {
+    if (ASSISTANT_LIVE) {
+      if (viewer) saveChatsLive(viewer.id, store)
+    } else {
+      saveChats(email, store)
+    }
+  }
   const [messages, setMessages] = useState<Message[]>([])
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
@@ -285,7 +303,12 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     setSkin(null)
 
     if (loggedIn) {
-      const store = loadChats<Message>(email)
+      const store = ASSISTANT_LIVE
+        ? initialChats && initialChats.length > 0
+          ? { list: initialChats as Conversation<Message>[], activeId: initialChats[0].id }
+          : null
+        : loadChats<Message>(email)
+      if (ASSISTANT_LIVE && store) rememberLoaded(store.list.map((c) => c.id))
       if (store && store.list.length > 0) {
         const active = store.list.find((c) => c.id === store.activeId) ?? store.list[0]
         const maxId = store.list.reduce(
@@ -338,7 +361,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
         : c,
     )
     setConvos(next)
-    saveChats(email, { list: next, activeId })
+    persist({ list: next, activeId })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, activeId, loggedIn, email])
 
@@ -493,7 +516,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     setConvos(next)
     setActiveId(conv.id)
     setMessages([greeting])
-    saveChats(email, { list: next, activeId: conv.id })
+    persist({ list: next, activeId: conv.id })
     setSidebarOpen(false)
   }
 
@@ -516,7 +539,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     if (nextId <= maxId) nextId = maxId + 1
     setActiveId(id)
     setMessages(conv.messages)
-    saveChats(email, { list: convosRef.current, activeId: id })
+    persist({ list: convosRef.current, activeId: id })
   }
 
   /** Удалить диалог из истории. */
@@ -536,7 +559,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
       setConvos([conv])
       setActiveId(conv.id)
       setMessages([greeting])
-      saveChats(email, { list: [conv], activeId: conv.id })
+      persist({ list: [conv], activeId: conv.id })
       return
     }
     setConvos(remaining)
@@ -548,9 +571,9 @@ export default function AssistantChat({ products }: { products: Product[] }) {
       if (nextId <= maxId) nextId = maxId + 1
       setActiveId(nextActive.id)
       setMessages(nextActive.messages)
-      saveChats(email, { list: remaining, activeId: nextActive.id })
+      persist({ list: remaining, activeId: nextActive.id })
     } else {
-      saveChats(email, { list: remaining, activeId })
+      persist({ list: remaining, activeId })
     }
   }
 

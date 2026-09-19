@@ -21,6 +21,10 @@ export interface Profile {
   avatar_url: string | null
   city: string | null
   created_at: string
+  /** Серверные баллы и карта лояльности (меняет только сервер). */
+  loyalty_points?: number
+  loyalty_tier?: LoyaltyTier
+  loyalty_card_no?: string | null
 }
 
 /** Публичная часть профиля (view public_profiles) — без телефона и роли. */

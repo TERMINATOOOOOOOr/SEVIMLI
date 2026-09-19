@@ -44,7 +44,9 @@ export default function ProfileView({ profile, email, orders, bookings, demo = f
   const demoLogout = useSession((s) => s.logout)
   const demoBecomeSeller = useSession((s) => s.becomeSeller)
   const demoUpdateProfile = useSession((s) => s.updateProfile)
-  const points = useLoyalty((s) => s.points)
+  const storePoints = useLoyalty((s) => s.points)
+  // Демо — баллы из localStorage; боевой режим — с сервера (profiles.loyalty_points)
+  const points = demo ? storePoints : Number(profile.loyalty_points ?? 0)
 
   const [tab, setTab] = useState<Tab>('orders')
   const [name, setName] = useState(profile.name ?? '')
@@ -56,6 +58,40 @@ export default function ProfileView({ profile, email, orders, bookings, demo = f
 
   // ВАЖНО: клиент Supabase создаём только внутри обработчиков и только
   // вне демо-режима — создание при рендере роняло страницу на проде.
+  const [deleteOk, setDeleteOk] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteErr, setDeleteErr] = useState<string | null>(null)
+
+  /** Удаление аккаунта: серверная функция delete_my_account (RLS-безопасно), затем выход. */
+  async function deleteAccount() {
+    if (!deleteOk || deleting) return
+    setDeleting(true)
+    setDeleteErr(null)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.rpc('delete_my_account')
+      if (error) {
+        const msg = error.message ?? ''
+        setDeleteErr(
+          /stand_account/.test(msg)
+            ? tr.profile.deleteStand
+            : /seller_has_open_orders/.test(msg)
+              ? tr.profile.deleteOpenOrders
+              : tr.profile.deleteFailed,
+        )
+        return
+      }
+      await supabase.auth.signOut().catch(() => {})
+      // Жёсткая навигация намеренно: после удаления аккаунта сбрасываем всё клиентское состояние
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign('/')
+    } catch {
+      setDeleteErr(tr.profile.deleteFailed)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   async function signOut() {
     if (demo) {
       demoLogout()
@@ -208,7 +244,7 @@ export default function ProfileView({ profile, email, orders, bookings, demo = f
         {tab === 'bookings' && <BookingsList bookings={bookings} />}
         {tab === 'loyalty' && (
           <div className="max-w-md">
-            <LoyaltyCard />
+            <LoyaltyCard server={demo ? undefined : { points, cardNo: profile.loyalty_card_no ?? null }} />
             <Link href="/loyalty" className="btn-outline mt-4 w-full !py-2.5 text-sm">
               {tr.profile.tiersHistory}
             </Link>
@@ -239,6 +275,30 @@ export default function ProfileView({ profile, email, orders, bookings, demo = f
                 {saving ? tr.profile.saving : tr.profile.save}
               </button>
               {savedMsg && <span className="text-sm text-secondary">{savedMsg}</span>}
+            </div>
+
+            {/* Удаление аккаунта (в демо-сессии удалять нечего) */}
+            <div className={cn('mt-8 rounded-2xl border border-red-200 bg-red-50/50 p-5', demo && 'hidden')}>
+              <h3 className="font-semibold text-neutral-900">{tr.profile.dangerZone}</h3>
+              <p className="mt-1.5 text-sm text-neutral-600">{tr.profile.deleteText}</p>
+              <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={deleteOk}
+                  onChange={(e) => setDeleteOk(e.target.checked)}
+                  className="h-4 w-4 accent-red-600"
+                />
+                {tr.profile.deleteConfirm}
+              </label>
+              <button
+                type="button"
+                onClick={deleteAccount}
+                disabled={!deleteOk || deleting}
+                className="mt-3 rounded-full border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {deleting ? tr.profile.deleting : tr.profile.deleteAccount}
+              </button>
+              {deleteErr && <p className="mt-2 text-sm text-red-600">{deleteErr}</p>}
             </div>
           </form>
         )}

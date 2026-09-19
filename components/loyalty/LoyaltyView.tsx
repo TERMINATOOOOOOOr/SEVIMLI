@@ -2,7 +2,10 @@
 
 import Link from 'next/link'
 import { Check, History, Gift, ArrowRight } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { useLoyalty } from '@/store/loyalty'
+import type { MyLoyalty } from '@/lib/data'
+import { isSupabaseConfigured } from '@/lib/utils'
 import { useHasMounted } from '@/lib/hooks'
 import { TIERS, tierOf } from '@/lib/loyalty'
 import { formatRelativeLang, formatPointsLang } from '@/lib/format'
@@ -12,11 +15,21 @@ import LoyaltyCard from '@/components/loyalty/LoyaltyCard'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 
-export default function LoyaltyView() {
-  const mounted = useHasMounted()
+/** server — баллы и история с сервера (боевой режим); null в live = гость. Демо — localStorage. */
+export default function LoyaltyView({ server = null }: { server?: MyLoyalty | null }) {
+  const hasMounted = useHasMounted()
   const { lang, t } = useLang()
-  const points = useLoyalty((s) => s.points)
-  const entries = useLoyalty((s) => s.entries)
+  const storePoints = useLoyalty((s) => s.points)
+  const storeEntries = useLoyalty((s) => s.entries)
+  const live = isSupabaseConfigured()
+  const guest = live && !server
+  // В live данные приходят с сервера — рендерим сразу, без скелетона
+  const mounted = live || hasMounted
+  const points = live ? (server?.points ?? 0) : storePoints
+  const entries = live ? (server?.entries ?? []) : storeEntries
+  /** Серверная причина 'order:<uuid>' → «Заказ на SEVIMLI #ab12cd34». */
+  const reasonLabel = (reason: string) =>
+    reason.startsWith('order:') ? `${t.cart.pointsReason} #${reason.slice(6, 14)}` : reason
 
   const current = mounted ? tierOf(points) : null
 
@@ -35,7 +48,7 @@ export default function LoyaltyView() {
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-        <LoyaltyCard />
+        <LoyaltyCard server={server ? { points: server.points, cardNo: server.cardNo } : null} />
 
         {/* Уровни */}
         <div>
@@ -92,7 +105,14 @@ export default function LoyaltyView() {
           <h2 className="font-semibold text-neutral-900">{t.loyalty.historyTitle}</h2>
         </div>
 
-        {!mounted ? (
+        {guest ? (
+          <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-neutral-300 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-neutral-600">{t.loyalty.loginToSee}</p>
+            <Link href="/auth?redirect=%2Floyalty" className="btn-primary !py-2.5 text-sm">
+              <LogIn size={16} /> {t.community.loginCta}
+            </Link>
+          </div>
+        ) : !mounted ? (
           <div className="h-24 animate-pulse rounded-2xl bg-neutral-100" />
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-neutral-300 py-12 text-center">
@@ -110,7 +130,7 @@ export default function LoyaltyView() {
                 className="flex items-center justify-between rounded-2xl border border-neutral-200 p-4"
               >
                 <div>
-                  <p className="font-medium text-neutral-900">{e.reason}</p>
+                  <p className="font-medium text-neutral-900">{reasonLabel(e.reason)}</p>
                   <p className="text-sm text-neutral-400">{formatRelativeLang(e.created_at, lang)}</p>
                 </div>
                 <span

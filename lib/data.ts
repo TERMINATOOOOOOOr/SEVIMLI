@@ -31,6 +31,7 @@ import type {
   Circle,
   CirclePreview,
   CircleState,
+  LoyaltyEntry,
 } from '@/lib/types'
 import { CIRCLE_WITH_ALL, normalizeCircle } from '@/lib/davra-select'
 
@@ -500,6 +501,133 @@ export async function getMyLikedPostIds(userId: string, postIds: string[]): Prom
     return (data ?? []).map((r: { post_id: string }) => r.post_id)
   } catch {
     return []
+  }
+}
+
+// ---------- Коды подлинности (кабинет продавца) ----------
+
+export interface ShopCode {
+  code: string
+  product_id: string | null
+  batch: string | null
+  expires_at: string | null
+  checks_count: number
+  first_checked_at: string | null
+  created_at: string
+}
+
+/** Коды, выпущенные магазином (RLS: владелец магазина с подтверждённым импортом или админ). */
+export async function getShopCodes(shopId: string): Promise<ShopCode[]> {
+  if (!isSupabaseConfigured()) return []
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('authenticity_codes')
+      .select('code, product_id, batch, expires_at, checks_count, first_checked_at, created_at')
+      .eq('shop_id', shopId)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    if (error) return []
+    return (data as ShopCode[] | null) ?? []
+  } catch {
+    return []
+  }
+}
+
+// ---------- История диалогов с Севилёй ----------
+
+export interface StoredConversation {
+  id: string
+  title: string
+  messages: unknown[]
+  updatedAt: number
+}
+
+/** Диалоги текущего пользователя (RLS: только свои), свежие сверху. Гость/демо → null. */
+export async function getMyAssistantChats(): Promise<StoredConversation[] | null> {
+  if (!isSupabaseConfigured()) return null
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return null
+    const { data, error } = await supabase
+      .from('assistant_conversations')
+      .select('id, title, messages, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(50)
+    if (error) return []
+    return (data ?? []).map((r) => ({
+      id: r.id as string,
+      title: (r.title as string) ?? '',
+      messages: Array.isArray(r.messages) ? (r.messages as unknown[]) : [],
+      updatedAt: Date.parse(r.updated_at as string) || 0,
+    }))
+  } catch {
+    return []
+  }
+}
+
+// ---------- Карта сайта ----------
+
+export interface SitemapEntries {
+  products: { id: string; at: string }[]
+  shops: { id: string; at: string }[]
+  posts: { id: string; at: string }[]
+}
+
+/** Публичные сущности для sitemap.xml. Демо-режим — только демо-товары и магазины (посты живут в браузере). */
+export async function getSitemapEntries(): Promise<SitemapEntries> {
+  if (!isSupabaseConfigured()) {
+    return {
+      products: demoProducts.map((p) => ({ id: p.id, at: p.created_at })),
+      shops: demoShops.map((s) => ({ id: s.id, at: s.created_at })),
+      posts: [],
+    }
+  }
+  try {
+    const supabase = await createClient()
+    const [products, shops, posts] = await Promise.all([
+      supabase.from('products').select('id, created_at').eq('is_active', true).order('created_at', { ascending: false }).limit(2000),
+      supabase.from('shops').select('id, created_at').order('created_at', { ascending: false }).limit(1000),
+      supabase.from('community_posts').select('id, created_at').eq('hidden', false).order('created_at', { ascending: false }).limit(1000),
+    ])
+    const map = (rows: { id: string; created_at: string }[] | null) => (rows ?? []).map((r) => ({ id: r.id, at: r.created_at }))
+    return { products: map(products.data), shops: map(shops.data), posts: map(posts.data) }
+  } catch {
+    return { products: [], shops: [], posts: [] }
+  }
+}
+
+// ---------- Лояльность ----------
+
+export interface MyLoyalty {
+  points: number
+  cardNo: string | null
+  entries: LoyaltyEntry[]
+}
+
+/** Баллы, номер карты и история начислений текущего пользователя (RLS: только свои). null — гость/демо. */
+export async function getMyLoyalty(): Promise<MyLoyalty | null> {
+  if (!isSupabaseConfigured()) return null
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return null
+    const [{ data: p }, { data: e }] = await Promise.all([
+      supabase.from('profiles').select('loyalty_points, loyalty_card_no').eq('id', user.id).maybeSingle(),
+      supabase.from('loyalty_entries').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
+    ])
+    return {
+      points: Number(p?.loyalty_points ?? 0),
+      cardNo: (p?.loyalty_card_no as string | null) ?? null,
+      entries: (e as LoyaltyEntry[] | null) ?? [],
+    }
+  } catch {
+    return null
   }
 }
 

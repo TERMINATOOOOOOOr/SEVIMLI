@@ -37,6 +37,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
+
+  // Админка: всем, кроме profiles.role = 'admin', отдаём честный 404 (страница сама проверяет роль ещё раз)
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    let isAdmin = false
+    if (user) {
+      const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      isAdmin = data?.role === 'admin'
+    }
+    if (!isAdmin) return NextResponse.rewrite(new URL('/__hidden__', request.url), { status: 404 })
+  }
+
   const isProtected = PROTECTED.some((p) => path === p || path.startsWith(p + '/'))
 
   if (isProtected && !user) {
