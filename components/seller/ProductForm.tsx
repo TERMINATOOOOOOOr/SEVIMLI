@@ -40,8 +40,16 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
 
   async function uploadFiles(): Promise<string[]> {
     const urls: string[] = []
+    if (files.length === 0) return urls
+    // Политика Storage (004): первая папка пути обязана быть id пользователя, а не магазина
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) throw new Error('Сессия истекла — войдите заново')
     for (const file of files) {
-      const path = `${shopId}/${Date.now()}-${Math.round(performance.now())}-${file.name}`
+      // Имя файла не доверяем (кириллица/пробелы ломают ключ) — берём только безопасное расширение
+      const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg'
+      const path = `${user.id}/${shopId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
       const { error: upErr } = await supabase.storage.from('products').upload(path, file, {
         cacheControl: '3600',
         upsert: false,
