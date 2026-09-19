@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Bot } from 'lucide-react'
-import { getOriginalProducts, getNewProducts } from '@/lib/data'
+import { getAssistantCatalog } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
 import AssistantChat from '@/components/assistant/AssistantChat'
 import SoftGlow from '@/components/ui/SoftGlow'
@@ -10,12 +10,8 @@ export const metadata: Metadata = { title: 'Севиля — подбор ухо
 
 export default async function AssistantPage() {
   const { t } = await getT()
-  // Каталог для рекомендаций: K-beauty + остальное (витамин C и т.п.)
-  const [original, fresh] = await Promise.all([getOriginalProducts(20), getNewProducts(50)])
-  const seen = new Set<string>()
-  const products = [...original, ...fresh].filter((p) =>
-    seen.has(p.id) ? false : (seen.add(p.id), true),
-  )
+  // Тот же каталог, что видит Севиля на сервере: маркеры карточек [[p:<id>]] в ответах всегда находят товар
+  const products = await getAssistantCatalog(150)
 
   return (
     <div className="relative isolate mx-auto max-w-2xl px-4 py-10 sm:px-6">

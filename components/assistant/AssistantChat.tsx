@@ -54,6 +54,30 @@ interface Message {
 
 let nextId = 1
 
+/** Маркер карточки товара в ответе Севили: [[p:<uuid>]] (ставит сервер вместо кода из каталога). */
+const CARD_MARK = /\[\[p:([0-9a-f-]{36})\]\]/g
+
+type Segment = { kind: 'text'; text: string } | { kind: 'product'; id: string }
+
+/** Текст ответа → куски текста и карточки товаров. */
+function splitCards(text: string): Segment[] {
+  const out: Segment[] = []
+  let last = 0
+  for (const m of text.matchAll(CARD_MARK)) {
+    const i = m.index ?? 0
+    if (i > last) out.push({ kind: 'text', text: text.slice(last, i) })
+    out.push({ kind: 'product', id: m[1] })
+    last = i + m[0].length
+  }
+  if (last < text.length) out.push({ kind: 'text', text: text.slice(last) })
+  return out
+}
+
+/** Текст без маркеров — для заголовков диалогов и истории. */
+function stripCards(text: string): string {
+  return text.replace(CARD_MARK, '').replace(/[ \t]+\n/g, '\n').trim()
+}
+
 /** Уникальный id диалога (браузерный рантайм). */
 function newConvId(): string {
   try {
@@ -69,7 +93,7 @@ const nowMs = () => Date.now()
 /** Автозаголовок диалога из первого сообщения пользователя. */
 function titleFromMessages(msgs: Message[], fallback: string): string {
   const firstUser = msgs.find((m) => m.role === 'user' && m.text)
-  const text = firstUser?.text?.trim()
+  const text = firstUser?.text ? stripCards(firstUser.text) : ''
   if (!text) return fallback
   return text.length > 30 ? text.slice(0, 30) + '…' : text
 }
@@ -216,6 +240,43 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     for (const p of products) map.set(p.id, p)
     return map
   }, [products])
+
+  /** Карточка товара внутри ответа Севили. */
+  function ProductChip({ p }: { p: Product }) {
+    return (
+      <div className="my-2 flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-2.5 text-left">
+        <Link href={`/product/${p.id}`} className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-neutral-100">
+          <Thumb src={p.images?.[0]} emoji="🧴" alt={productName(p, lang)} />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <Link href={`/product/${p.id}`} className="line-clamp-2 text-sm font-medium text-neutral-900 hover:text-primary">
+            {productName(p, lang)}
+          </Link>
+          <p className="mt-0.5 text-xs text-neutral-500">{p.shop?.name ?? ''}</p>
+          <p className="mt-0.5 text-sm font-bold text-primary">{formatPriceLang(p.price, lang)}</p>
+        </div>
+        <button
+          onClick={() => onAdd(p)}
+          className="btn-primary shrink-0 !px-3 !py-2 text-xs"
+          aria-label={t.common.addToCart}
+        >
+          <ShoppingBag size={14} />
+          <span className="hidden sm:inline">{addedId === p.id ? t.assistant.added : t.common.addToCart}</span>
+        </button>
+      </div>
+    )
+  }
+
+  /** Ответ бота: текст + карточки товаров на месте маркеров [[p:<id>]]. */
+  function renderBotText(text: string) {
+    const segments = splitCards(text)
+    if (segments.length === 1 && segments[0].kind === 'text') return text
+    return segments.map((s, i) => {
+      if (s.kind === 'text') return <span key={i}>{s.text}</span>
+      const p = productById.get(s.id)
+      return p ? <ProductChip key={i} p={p} /> : null
+    })
+  }
 
   const skinChips: Chip[] = SKIN_OPTIONS.map((o) => ({ id: `skin:${o.id}`, label: o.label[lang] }))
   const concernChips: Chip[] = CONCERN_OPTIONS.map((o) => ({
@@ -372,6 +433,7 @@ export default function AssistantChat({ products }: { products: Product[] }) {
 
   /** Живой ответ Севили (Claude, стриминг). При лимите/ошибке — откат на offlineReply. */
   async function askClaude(text: string) {
+    // Маркеры карточек [[p:<id>]] отправляем как есть — сервер вернёт модели её коды
     const convo = [
       ...messages
         .filter((m) => m.text)
@@ -636,13 +698,13 @@ export default function AssistantChat({ products }: { products: Product[] }) {
               {m.text && (
                 <div
                   className={cn(
-                    'inline-block rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+                    'inline-block whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
                     m.role === 'user'
                       ? 'rounded-br-md bg-primary text-white'
                       : 'rounded-bl-md bg-neutral-100 text-neutral-800',
                   )}
                 >
-                  {m.text}
+                  {m.role === 'bot' ? renderBotText(m.text) : m.text}
                 </div>
               )}
 

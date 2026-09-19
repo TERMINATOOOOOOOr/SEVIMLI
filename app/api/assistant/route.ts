@@ -17,30 +17,95 @@ const MODEL = process.env.ASSISTANT_MODEL || 'claude-haiku-4-5'
 const DAILY_CAP = Math.max(100, Number(process.env.ASSISTANT_DAILY_CAP ?? 2000) || 2000)
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Компактный каталог для заземления — чтобы Севиля советовала только реальные товары. */
-async function catalogText(): Promise<string> {
-  const [products, categories] = await Promise.all([getAssistantCatalog(150), getCategories()])
-  if (products.length === 0) {
-    return '(каталог пока пуст — честно скажи, что товары появятся, и отвечай на вопросы о площадке)'
-  }
-  const cat = new Map(categories.map((c) => [c.slug, c.name_ru] as const))
-  return products
-    .map((p) => {
-      const slug = p.category_slug ?? ''
-      const c = cat.get(slug) ?? slug ?? '—'
-      const price = new Intl.NumberFormat('ru-RU').format(p.price)
-      const desc = p.description ? ` · ${p.description.slice(0, 90)}` : ''
-      return `- ${p.name} — ${price} сум · ${c}${desc}`
-    })
-    .join('\n')
+/**
+ * Каталог для заземления с короткими кодами товаров: модель пишет [[P12]] вместо названия и цены,
+ * сервер в потоке заменяет код на [[p:<uuid>]], а чат рисует на этом месте карточку товара.
+ */
+interface Catalog {
+  text: string
+  codeToId: Map<string, string>
+  idToCode: Map<string, string>
 }
 
-async function systemPrompt(lang: 'ru' | 'uz'): Promise<string> {
+async function loadCatalog(): Promise<Catalog> {
+  const [products, categories] = await Promise.all([getAssistantCatalog(150), getCategories()])
+  const codeToId = new Map<string, string>()
+  const idToCode = new Map<string, string>()
+  if (products.length === 0) {
+    return {
+      text: '(каталог пока пуст — честно скажи, что товары появятся, и отвечай на вопросы о площадке)',
+      codeToId,
+      idToCode,
+    }
+  }
+  const cat = new Map(categories.map((c) => [c.slug, c.name_ru] as const))
+  const lines = products.map((p, i) => {
+    const code = `P${i + 1}`
+    codeToId.set(code, p.id)
+    idToCode.set(p.id, code)
+    const slug = p.category_slug ?? ''
+    const c = cat.get(slug) ?? slug ?? '—'
+    const price = new Intl.NumberFormat('ru-RU').format(p.price)
+    const desc = p.description ? ` · ${p.description.slice(0, 90)}` : ''
+    return `- [[${code}]] ${p.name} — ${price} сум · ${c}${desc}`
+  })
+  return { text: lines.join('\n'), codeToId, idToCode }
+}
+
+/** Маркер карточки в тексте чата (что видит клиент и что хранится в истории). */
+const CARD_MARK = /\[\[p:([0-9a-f-]{36})\]\]/g
+
+/** История от клиента содержит [[p:<uuid>]] — модели возвращаем её же коды [[Pn]]. */
+function toModelCodes(text: string, idToCode: Map<string, string>): string {
+  return text.replace(CARD_MARK, (m, id: string) => {
+    const code = idToCode.get(id)
+    return code ? `[[${code}]]` : ''
+  })
+}
+
+/**
+ * Потоковая замена [[Pn]] → [[p:<uuid>]] (и страховка от markdown «**»).
+ * Незакрытый маркер и одиночные «[»/«*» на границе чанка придерживаем до следующего чанка.
+ */
+function makeMarkerTransform(codeToId: Map<string, string>) {
+  let carry = ''
+  const replace = (s: string) =>
+    s
+      .replace(/\*\*/g, '')
+      .replace(/\[\[?\s*(P\d{1,3})\s*\]\]?/g, (m, code: string) => {
+        const id = codeToId.get(code)
+        return id ? `[[p:${id}]]` : ''
+      })
+  return {
+    push(delta: string): string {
+      let buf = carry + delta
+      carry = ''
+      let open = buf.lastIndexOf('[')
+      while (open > 0 && buf[open - 1] === '[') open-- // начало ряда «[[», а не последняя скобка
+      const close = buf.lastIndexOf(']]')
+      if (open !== -1 && open > close && buf.length - open < 24) {
+        // возможно, начало маркера — ждём закрытия (но не дольше 24 символов)
+        carry = buf.slice(open)
+        buf = buf.slice(0, open)
+      } else if (buf.endsWith('*')) {
+        carry = '*'
+        buf = buf.slice(0, -1)
+      }
+      return replace(buf)
+    },
+    flush(): string {
+      const rest = carry
+      carry = ''
+      return replace(rest)
+    },
+  }
+}
+
+async function systemPrompt(lang: 'ru' | 'uz', catalog: string): Promise<string> {
   const language =
     lang === 'uz'
       ? 'узбекском языке ЛАТИНИЦЕЙ (oʻzbek lotin yozuvi; кириллицу и русские слова не используй, описания товаров переводи своими словами, названия товаров оставляй как в каталоге)'
       : 'русском языке'
-  const catalog = await catalogText()
   return `Ты — Севиля, дружелюбная ИИ-помощница маркетплейса SEVIMLI (площадка для женщин Узбекистана: проверенные магазины косметики и одежды, салоны, сообщество). Отвечай ТОЛЬКО на ${language}, тепло и по делу, коротко (2–5 предложений), с лёгкими эмодзи по месту. Никакой markdown-разметки: никаких **, заголовков и звёздочек.
 
 Что такое SEVIMLI (используй как факты):
@@ -64,7 +129,14 @@ async function systemPrompt(lang: 'ru' | 'uz'): Promise<string> {
 - Это советы по уходу, а не медицинская консультация. Никогда не обещай «вылечить», не называй товары лекарством, не ставь диагнозы, не советуй лекарства и БАДы. При акне, дерматите, аллергии, беременности или любых серьёзных проблемах с кожей советуй обратиться к дерматологу.
 - Если спросят, кто ты, — честно: ты ИИ-помощница SEVIMLI по имени Севиля.
 - Не обещай бесплатную доставку, возврат денег или решение спора «в пользу покупателя» — это решает магазин по закону.
-- Пиши простым текстом без markdown-разметки: никаких ** для жирного, # для заголовков или списков со звёздочками. Названия товаров бери в кавычки «…». Если перечисляешь шаги — короткими строками «1) …», «2) …». Эмодзи и переносы строк можно.
+- Пиши простым текстом без markdown-разметки: никаких ** для жирного, # для заголовков или списков со звёздочками. Если перечисляешь шаги — короткими строками «1) …», «2) …». Эмодзи и переносы строк можно.
+
+КАРТОЧКИ ТОВАРОВ (важно): у каждого товара в каталоге есть код в двойных квадратных скобках, например [[P12]]. Когда рекомендуешь товар, вставляй ЕГО КОД ровно как в каталоге ВМЕСТО названия и цены — на месте кода покупательница увидит карточку товара с фото, названием, ценой и кнопкой «В корзину». Не пиши название и цену рядом с кодом. Каждый код — на отдельной строке, а строкой ниже — короткое пояснение, зачем он нужен. Пример:
+[[P12]]
+Глубоко увлажняет и быстро впитывается — основа ухода.
+[[P7]]
+Мягкий тонер перед сывороткой.
+Не больше 4 товаров в ответе. Никогда не выдумывай коды и не упоминай товары, которых нет в каталоге.
 
 Каталог товаров SEVIMLI:
 ${catalog}`
@@ -144,7 +216,12 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('no_user_message', { status: 400 })
   }
 
-  const system = await systemPrompt(lang)
+  const catalog = await loadCatalog()
+  const system = await systemPrompt(lang, catalog.text)
+  // В истории от клиента маркеры карточек [[p:<uuid>]] — модели показываем её коды [[Pn]]
+  const modelMessages = messages.map((m) =>
+    m.role === 'assistant' ? { ...m, content: toModelCodes(m.content, catalog.idToCode) } : m,
+  )
 
   // 4) Стриминг ответа Claude.
   const client = new Anthropic({ apiKey })
@@ -157,23 +234,18 @@ export async function POST(req: Request): Promise<Response> {
           model: MODEL,
           max_tokens: 700,
           system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-          messages,
+          messages: modelMessages,
         })
-        // Страховка от markdown: «**» вырезаем прямо в потоке (одиночную «*» на границе чанка придерживаем)
-        let carry = ''
+        // Коды товаров → маркеры карточек, «**» вырезаем; хвосты держим до следующего чанка
+        const tx = makeMarkerTransform(catalog.codeToId)
         for await (const event of stream) {
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            let text = carry + event.delta.text
-            carry = ''
-            if (text.endsWith('*')) {
-              carry = '*'
-              text = text.slice(0, -1)
-            }
-            text = text.replace(/\*\*/g, '')
+            const text = tx.push(event.delta.text)
             if (text) controller.enqueue(encoder.encode(text))
           }
         }
-        if (carry) controller.enqueue(encoder.encode(carry))
+        const tail = tx.flush()
+        if (tail) controller.enqueue(encoder.encode(tail))
         controller.close()
       } catch (err) {
         // Ошибку не заглушаем: клиент увидит оборванный/пустой поток и откатится.
