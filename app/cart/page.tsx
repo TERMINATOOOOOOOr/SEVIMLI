@@ -401,6 +401,9 @@ export default function CartPage() {
           >
             {submitting ? t.cart.submitting : t.cart.submit}
           </button>
+          {!consent && (
+            <p className="mt-2 text-xs text-neutral-400">{t.cart.consentHint}</p>
+          )}
         </aside>
       </div>
     </div>

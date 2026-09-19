@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import { useCart, selectTotalPrice } from '@/store/cart'
 import { formatPriceLang } from '@/lib/format'
@@ -14,6 +16,12 @@ export default function CartDrawer() {
   const { lang, t } = useLang()
   const { items, isOpen, close, updateQuantity, removeItem } = useCart()
   const total = useCart(selectTotalPrice)
+  const pathname = usePathname()
+
+  // На странице оформления боковая корзина не нужна — иначе она перекрывает форму заказа.
+  useEffect(() => {
+    if (pathname === '/cart' && isOpen) close()
+  }, [pathname, isOpen, close])
 
   return (
     <>

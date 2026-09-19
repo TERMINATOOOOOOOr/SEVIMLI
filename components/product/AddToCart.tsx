@@ -16,7 +16,8 @@ export default function AddToCart({ product }: { product: Product }) {
   const outOfStock = product.stock <= 0
 
   function buyNow() {
-    addItem(product, qty)
+    // Тихо: иначе боковая корзина откроется поверх страницы оформления
+    addItem(product, qty, false)
     router.push('/cart')
   }
 

@@ -12,7 +12,8 @@ export interface CartItem {
 interface CartState {
   items: CartItem[]
   isOpen: boolean
-  addItem: (product: Product, qty?: number) => void
+  /** openDrawer=false — тихо добавить (например, «Купить сейчас» сразу ведёт на оформление). */
+  addItem: (product: Product, qty?: number, openDrawer?: boolean) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, qty: number) => void
   clearCart: () => void
@@ -27,18 +28,19 @@ export const useCart = create<CartState>()(
       items: [],
       isOpen: false,
 
-      addItem: (product, qty = 1) =>
+      addItem: (product, qty = 1, openDrawer = true) =>
         set((state) => {
+          const isOpen = openDrawer ? true : state.isOpen
           const existing = state.items.find((i) => i.product.id === product.id)
           if (existing) {
             return {
               items: state.items.map((i) =>
                 i.product.id === product.id ? { ...i, quantity: i.quantity + qty } : i,
               ),
-              isOpen: true,
+              isOpen,
             }
           }
-          return { items: [...state.items, { product, quantity: qty }], isOpen: true }
+          return { items: [...state.items, { product, quantity: qty }], isOpen }
         }),
 
       removeItem: (id) =>

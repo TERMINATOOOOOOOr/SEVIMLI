@@ -141,7 +141,7 @@ export default function DavraView({ products }: { products: Product[] }) {
   function checkoutMy() {
     const mine = rows.filter((r) => r.addedBy === DAVRA_ME)
     for (const r of mine) {
-      addToCart({ ...r.product, price: davraPrice(r.product.price, discountActive) }, r.qty)
+      addToCart({ ...r.product, price: davraPrice(r.product.price, discountActive) }, r.qty, false)
       removeItem(r.productId, r.addedBy)
     }
     router.push('/cart')
