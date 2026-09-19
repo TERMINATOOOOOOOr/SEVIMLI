@@ -504,6 +504,22 @@ export async function getMyLikedPostIds(userId: string, postIds: string[]): Prom
   }
 }
 
+// ---------- Оплата заказа ----------
+
+/** Заказ с магазином для страницы оплаты. RLS отдаёт только свой заказ (покупательница или продавец). */
+export async function getOrderForPayment(id: string): Promise<Order | null> {
+  if (!isSupabaseConfigured()) return null
+  if (!isUuid(id)) return null
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.from('orders').select('*, shop:shops(*)').eq('id', id).maybeSingle()
+    if (error || !data) return null
+    return data as Order
+  } catch {
+    return null
+  }
+}
+
 // ---------- Коды подлинности (кабинет продавца) ----------
 
 export interface ShopCode {

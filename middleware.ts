@@ -18,6 +18,9 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const method = request.method
 
+  // Вебхуки платёжных провайдеров: без сессий, редиректов и лимитов по IP (их шлёт сервер провайдера)
+  if (path.startsWith('/api/pay/')) return NextResponse.next()
+
   // Настоящий 404 (а не 200 со стримом not-found из-за loading.tsx)
   if (!COURIER_DEMO && /^\/courier(\/|$)/.test(path)) {
     return NextResponse.rewrite(new URL('/__hidden__', request.url), { status: 404 })

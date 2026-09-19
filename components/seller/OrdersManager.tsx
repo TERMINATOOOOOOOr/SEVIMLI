@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Phone, MapPin, Store, Truck, KeyRound } from 'lucide-react'
+import { Phone, MapPin, Store, Truck, KeyRound, Wallet } from 'lucide-react'
 import type { Order, OrderStatus } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { formatPrice, formatDate } from '@/lib/format'
@@ -41,6 +41,25 @@ export default function OrdersManager({
 
   function patch(id: string, data: Partial<Order>) {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...data } : o)))
+  }
+
+  /** Оплату подтверждает вебхук кассы; если ключа нет — продавец отмечает её руками. */
+  async function togglePaid(order: Order) {
+    const paid = order.payment_status === 'paid'
+    if (demo) {
+      patch(order.id, { payment_status: paid ? 'unpaid' : 'paid' })
+      return
+    }
+    setBusy(order.id)
+    try {
+      const { error: err } = await createClient().rpc(paid ? 'set_order_unpaid' : 'set_order_paid', { p_order: order.id })
+      if (err) throw err
+      patch(order.id, { payment_status: paid ? 'unpaid' : 'paid', paid_at: paid ? null : new Date().toISOString() })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не получилось изменить оплату')
+    } finally {
+      setBusy(null)
+    }
   }
 
   async function setStatus(order: Order, status: OrderStatus) {
@@ -139,6 +158,24 @@ export default function OrdersManager({
                         Davra{o.discount_total ? ` · −${formatPrice(o.discount_total)}` : ''}
                       </span>
                     )}
+                    <span
+                      className={cn(
+                        'rounded-full px-2.5 py-1 text-xs font-medium',
+                        o.payment_status === 'paid'
+                          ? 'bg-secondary-light text-secondary'
+                          : o.payment_status === 'pending'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-neutral-100 text-neutral-500',
+                      )}
+                    >
+                      {o.payment_status === 'paid'
+                        ? 'Оплачен'
+                        : o.payment_status === 'pending'
+                          ? 'Ждёт оплаты'
+                          : o.payment_status === 'refunded'
+                            ? 'Возврат'
+                            : 'Не оплачен'}
+                    </span>
                     <span className="font-semibold">{formatPrice(o.total_price ?? 0)}</span>
                     <span className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[o.status])}>
                       {ORDER_STATUS_LABEL[o.status]}
@@ -191,6 +228,15 @@ export default function OrdersManager({
 
                 {open && (
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3">
+                    <button
+                      onClick={() => togglePaid(o)}
+                      disabled={busy === o.id}
+                      className="btn-outline !px-4 !py-2 text-sm"
+                      title="Оплата подтверждается автоматически, если в настройках магазина введён ключ кассы"
+                    >
+                      <Wallet size={15} />
+                      {o.payment_status === 'paid' ? 'Снять отметку оплаты' : 'Отметить оплаченным'}
+                    </button>
                     {action && (
                       <button
                         onClick={() => setStatus(o, action.to)}

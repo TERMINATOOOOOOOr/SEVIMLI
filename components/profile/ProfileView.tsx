@@ -3,16 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
-import {
-  LogOut,
-  Store,
-  Package,
-  CalendarClock,
-  Settings,
-  ShoppingBag,
-  Gift,
-  ChevronRight,
-} from 'lucide-react'
+import { LogOut, Store, Package, CalendarClock, Settings, ShoppingBag, Gift, ChevronRight, CreditCard } from 'lucide-react'
 import type { Profile, Order, Booking } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { orderPickupCode, effectiveStatus } from '@/lib/courier'
@@ -331,6 +322,24 @@ function OrdersList({ orders }: { orders: Order[] }) {
                     Davra −{formatPriceLang(Number(o.discount_total), lang)}
                   </span>
                 )}
+                <span
+                  className={cn(
+                    'rounded-full px-2.5 py-1 text-xs font-medium',
+                    o.payment_status === 'paid'
+                      ? 'bg-secondary-light text-secondary'
+                      : o.payment_status === 'pending'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-neutral-100 text-neutral-500',
+                  )}
+                >
+                  {o.payment_status === 'paid'
+                    ? t.pay.statusPaid
+                    : o.payment_status === 'pending'
+                      ? t.pay.statusPending
+                      : o.payment_status === 'refunded'
+                        ? t.pay.statusRefunded
+                        : t.pay.statusUnpaid}
+                </span>
                 <span className="font-semibold">{formatPriceLang(o.total_price ?? 0, lang)}</span>
                 <span
                   className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[eff])}
@@ -339,6 +348,13 @@ function OrdersList({ orders }: { orders: Order[] }) {
                 </span>
               </div>
             </div>
+
+            {/* Оплата: пока не оплачен и заказ жив — даём путь в кассу магазина */}
+            {o.payment_status !== 'paid' && eff !== 'cancelled' && (
+              <Link href={`/pay/${o.id}`} className="btn-outline mt-3 !py-2 text-sm">
+                <CreditCard size={15} /> {t.pay.payNow}
+              </Link>
+            )}
 
             {/* Код получения — покупательница называет его курьеру */}
             {eff === 'delivering' && (

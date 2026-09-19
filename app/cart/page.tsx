@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, ShoppingBag, Trash2, Plus, Minus, Truck, Gift, Store, MapPin, Users } from 'lucide-react'
+import { CheckCircle2, ShoppingBag, Trash2, Plus, Minus, Truck, Gift, Store, MapPin, Users, Wallet, CreditCard } from 'lucide-react'
 import { davraPrice } from '@/store/davra'
 import { useCart, selectTotalPrice, type CartItem } from '@/store/cart'
 import { useLoyalty } from '@/store/loyalty'
@@ -18,6 +18,7 @@ import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
+import { shopAcceptsOnline } from '@/lib/payments'
 
 type DeliveryMethod = 'seller' | 'pickup'
 
@@ -58,12 +59,18 @@ export default function CartPage() {
   const [comment, setComment] = useState('')
   const [method, setMethod] = useState<DeliveryMethod>('seller')
   const [consent, setConsent] = useState(false)
+  /** Способ оплаты: при получении или картой в кассе магазина. */
+  const [payMethod, setPayMethod] = useState<'cod' | 'online'>('cod')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [earned, setEarned] = useState(0)
   /** Скидка круга, которую реально применил сервер (create_order). */
   const [serverDiscount, setServerDiscount] = useState(0)
+  /** Созданные заказы: по ним на экране подтверждения даём кнопку оплаты. */
+  const [paidLinks, setPaidLinks] = useState<string[]>([])
+  /** Способ оплаты фиксируем при оформлении: после него корзина пуста и выбор уже не вычислить. */
+  const [orderedOnline, setOrderedOnline] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return
@@ -93,6 +100,28 @@ export default function CartPage() {
   }, [items])
 
   const pickupAvailable = groups.length > 0 && groups.every((g) => g.shop?.pickup_enabled)
+  // Настройки оплаты магазинов берём свежими с сервера: в корзине лежит снимок магазина
+  // на момент добавления товара, и кассу, настроенную позже, он не видит
+  const shopIdsKey = groups.map((g) => g.shopId).sort().join(',')
+  const [payShops, setPayShops] = useState<Record<string, Shop>>({})
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !shopIdsKey) return
+    let cancelled = false
+    createClient()
+      .from('shops')
+      .select('id, payment_provider, payme_merchant_id, click_service_id, click_merchant_id, payment_url')
+      .in('id', shopIdsKey.split(','))
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setPayShops(Object.fromEntries((data as Shop[]).map((sh) => [sh.id, sh])))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [shopIdsKey])
+  // Картой можно, только если КАЖДЫЙ магазин в корзине настроил приём оплаты
+  const onlineAvailable = groups.length > 0 && groups.every((g) => shopAcceptsOnline(payShops[g.shopId] ?? g.shop))
+  const effectivePay: 'cod' | 'online' = payMethod === 'online' && onlineAvailable ? 'online' : 'cod'
   const effectiveMethod: DeliveryMethod = method === 'pickup' && pickupAvailable ? 'pickup' : 'seller'
   const deliveryTotal = groups.reduce((s, g) => s + deliveryFee(g, effectiveMethod), 0)
   // Оценка скидки круга по тем же правилам, что и на сервере (решает сервер): только товары из круга,
@@ -154,6 +183,8 @@ export default function CartPage() {
       if (rpcErr) throw rpcErr
       const created = (data as { order_id?: string; discount?: number }[] | null) ?? []
       setServerDiscount(created.reduce((sum, o) => sum + Number(o.discount ?? 0), 0))
+      setPaidLinks(created.map((o) => o.order_id).filter((x): x is string => Boolean(x)))
+      setOrderedOnline(effectivePay === 'online')
       const firstId = created[0]?.order_id ?? ''
       clearCart()
       setOrderNumber(firstId ? firstId.slice(0, 8) : '—')
@@ -188,6 +219,18 @@ export default function CartPage() {
           <div className="mt-5 flex items-center gap-2 rounded-2xl bg-primary-light px-4 py-3 text-sm font-medium text-primary">
             <Gift size={18} />
             {t.cart.earned} {formatPointsLang(earned, lang)} {t.cart.earnedSuffix}
+          </div>
+        )}
+
+        {orderedOnline && paidLinks.length > 0 && (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            {paidLinks.map((oid, i) => (
+              <Link key={oid} href={`/pay/${oid}`} className="btn-primary">
+                <CreditCard size={16} /> {t.pay.payNow}
+                {paidLinks.length > 1 ? ` · ${i + 1}/${paidLinks.length}` : ''}
+              </Link>
+            ))}
+            <p className="text-xs text-neutral-400">{t.pay.directToShop}</p>
           </div>
         )}
 
@@ -360,6 +403,46 @@ export default function CartPage() {
                 />
               </div>
             )}
+            {/* Оплата: при получении или картой в кассе магазина */}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label
+                className={cn(
+                  'flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors',
+                  effectivePay === 'cod' ? 'border-primary bg-primary-light/40' : 'border-neutral-200',
+                )}
+              >
+                <input type="radio" name="pay" checked={effectivePay === 'cod'} onChange={() => setPayMethod('cod')} className="mt-0.5 accent-primary" />
+                <span>
+                  <span className="flex items-center gap-1.5 font-medium text-neutral-900">
+                    <Wallet size={15} className="text-primary" /> {t.pay.cod}
+                  </span>
+                  <span className="block text-xs text-neutral-500">{t.pay.codHint}</span>
+                </span>
+              </label>
+              <label
+                className={cn(
+                  'flex items-start gap-3 rounded-xl border p-3 text-sm transition-colors',
+                  onlineAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+                  effectivePay === 'online' ? 'border-primary bg-primary-light/40' : 'border-neutral-200',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="pay"
+                  disabled={!onlineAvailable}
+                  checked={effectivePay === 'online'}
+                  onChange={() => setPayMethod('online')}
+                  className="mt-0.5 accent-primary"
+                />
+                <span>
+                  <span className="flex items-center gap-1.5 font-medium text-neutral-900">
+                    <CreditCard size={15} className="text-primary" /> {t.pay.online}
+                  </span>
+                  <span className="block text-xs text-neutral-500">{onlineAvailable ? t.pay.onlineHint : t.pay.onlineNotAll}</span>
+                </span>
+              </label>
+            </div>
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral-700">{t.cart.commentLabel}</label>
               <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={2} className="input resize-none" />

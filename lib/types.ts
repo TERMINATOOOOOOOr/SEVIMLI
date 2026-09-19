@@ -76,7 +76,19 @@ export interface Shop {
   is_demo?: boolean
   /** Магазин участвует в Davra: даёт −10% кругам при сумме круга от 500 000 сум. */
   davra_enabled?: boolean
+  /** Приём оплаты: деньги идут магазину напрямую, платформа лишь собирает ссылку. */
+  payment_provider?: ShopPayMode
+  payme_merchant_id?: string | null
+  payme_account_field?: string | null
+  click_service_id?: string | null
+  click_merchant_id?: string | null
+  payment_url?: string | null
+  payment_note?: string | null
 }
+
+/** Способ оплаты, настроенный магазином. */
+export type ShopPayMode = 'none' | 'payme' | 'click' | 'link'
+export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'refunded' | 'failed'
 
 export interface Product {
   id: string
@@ -127,6 +139,13 @@ export interface Order {
   /** Заказ из круга Davra: скидка круга уже в price_at_order, сумма скидки — discount_total. */
   circle_id?: string | null
   discount_total?: number | null
+  /** Оплата: статус меняют только серверные функции и вебхуки провайдеров. */
+  payment_status?: PaymentStatus
+  payment_provider?: 'cod' | 'payme' | 'click' | 'link' | null
+  paid_at?: string | null
+  payment_ref?: string | null
+  /** Подгружается через join при выборке (страница оплаты, кабинет). */
+  shop?: Shop | null
   /** Подгружается через join order_items. */
   items?: OrderItem[]
 }

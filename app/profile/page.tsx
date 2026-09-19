@@ -23,7 +23,7 @@ export default async function ProfilePage() {
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase
       .from('orders')
-      .select('*, items:order_items(*, product:products(*))')
+      .select('*, shop:shops(*), items:order_items(*, product:products(*))')
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false }),
     supabase
