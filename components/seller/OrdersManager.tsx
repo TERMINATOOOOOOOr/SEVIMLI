@@ -130,7 +130,15 @@ export default function OrdersManager({
                     <p className="font-medium text-neutral-900">Заказ #{o.id.slice(0, 8)}</p>
                     <p className="text-sm text-neutral-400">{formatDate(o.created_at)}</p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {o.circle_id && (
+                      <span
+                        className="rounded-full bg-secondary-light px-2.5 py-1 text-xs font-semibold text-secondary"
+                        title="Заказ из круга Davra: цены уже со скидкой круга −10%"
+                      >
+                        Davra{o.discount_total ? ` · −${formatPrice(o.discount_total)}` : ''}
+                      </span>
+                    )}
                     <span className="font-semibold">{formatPrice(o.total_price ?? 0)}</span>
                     <span className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[o.status])}>
                       {ORDER_STATUS_LABEL[o.status]}

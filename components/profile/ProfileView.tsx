@@ -265,7 +265,12 @@ function OrdersList({ orders }: { orders: Order[] }) {
                 </p>
                 <p className="text-sm text-neutral-400">{formatDateLang(o.created_at, lang)}</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {Number(o.discount_total ?? 0) > 0 && (
+                  <span className="rounded-full bg-secondary-light px-2.5 py-1 text-xs font-semibold text-secondary">
+                    Davra −{formatPriceLang(Number(o.discount_total), lang)}
+                  </span>
+                )}
                 <span className="font-semibold">{formatPriceLang(o.total_price ?? 0, lang)}</span>
                 <span
                   className={cn('rounded-full px-3 py-1 text-xs font-medium', ORDER_STATUS_STYLE[eff])}

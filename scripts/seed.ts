@@ -81,6 +81,8 @@ async function main() {
     const { data, error } = await supabase.rpc('seed_demo', { p_shops: shops, p_products: products })
     if (error) throw error
     console.log('Сид выполнен:', JSON.stringify(data))
+    // Демо-магазины участвуют в Davra — иначе скидку круга на стенде не показать
+    await supabase.from('shops').update({ davra_enabled: true }).eq('is_demo', true)
   }
 
   // Сообщество: товары привязываются по имени среди товаров демо-магазинов (см. 008/009).

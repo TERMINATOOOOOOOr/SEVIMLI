@@ -30,6 +30,7 @@ export default function ShopForm({ userId, shop }: { userId: string; shop: Shop 
   const [deliveryDays, setDeliveryDays] = useState(shop?.delivery_days_text ?? 'По Ташкенту — 1–2 дня')
   const [pickupEnabled, setPickupEnabled] = useState(Boolean(shop?.pickup_enabled))
   const [pickupAddress, setPickupAddress] = useState(shop?.pickup_address ?? '')
+  const [davraEnabled, setDavraEnabled] = useState(Boolean(shop?.davra_enabled))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
@@ -70,6 +71,7 @@ export default function ShopForm({ userId, shop }: { userId: string; shop: Shop 
         delivery_days_text: deliveryDays.trim() || null,
         pickup_enabled: pickupEnabled,
         pickup_address: pickupEnabled ? pickupAddress.trim() || null : null,
+        davra_enabled: davraEnabled,
       }
 
       const supabase = createClient()
@@ -200,6 +202,20 @@ export default function ShopForm({ userId, shop }: { userId: string; shop: Shop 
               className="h-4 w-4 accent-primary"
             />
             Есть самовывоз
+          </label>
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              checked={davraEnabled}
+              onChange={(e) => setDavraEnabled(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary"
+            />
+            <span>
+              Участвую в Davra
+              <span className="block text-xs text-neutral-500">
+                Кругам подруг с общей суммой от 500 000 сум даю скидку −10% на свои товары. Скидку даёте вы, не площадка.
+              </span>
+            </span>
           </label>
           {pickupEnabled && (
             <div>

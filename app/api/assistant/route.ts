@@ -3,6 +3,7 @@ import { getAssistantCatalog, getCategories } from '@/lib/data'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { isSupabaseConfigured } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
+import { makeMarkerTransform, toModelCodes } from '@/lib/assistant-markers'
 
 /**
  * Живой ассистент «Севиля» на Claude. Ключ читается на сервере из ANTHROPIC_API_KEY
@@ -52,55 +53,6 @@ async function loadCatalog(): Promise<Catalog> {
   return { text: lines.join('\n'), codeToId, idToCode }
 }
 
-/** Маркер карточки в тексте чата (что видит клиент и что хранится в истории). */
-const CARD_MARK = /\[\[p:([0-9a-f-]{36})\]\]/g
-
-/** История от клиента содержит [[p:<uuid>]] — модели возвращаем её же коды [[Pn]]. */
-function toModelCodes(text: string, idToCode: Map<string, string>): string {
-  return text.replace(CARD_MARK, (m, id: string) => {
-    const code = idToCode.get(id)
-    return code ? `[[${code}]]` : ''
-  })
-}
-
-/**
- * Потоковая замена [[Pn]] → [[p:<uuid>]] (и страховка от markdown «**»).
- * Незакрытый маркер и одиночные «[»/«*» на границе чанка придерживаем до следующего чанка.
- */
-function makeMarkerTransform(codeToId: Map<string, string>) {
-  let carry = ''
-  const replace = (s: string) =>
-    s
-      .replace(/\*\*/g, '')
-      .replace(/\[\[?\s*(P\d{1,3})\s*\]\]?/g, (m, code: string) => {
-        const id = codeToId.get(code)
-        return id ? `[[p:${id}]]` : ''
-      })
-  return {
-    push(delta: string): string {
-      let buf = carry + delta
-      carry = ''
-      let open = buf.lastIndexOf('[')
-      while (open > 0 && buf[open - 1] === '[') open-- // начало ряда «[[», а не последняя скобка
-      const close = buf.lastIndexOf(']]')
-      if (open !== -1 && open > close && buf.length - open < 24) {
-        // возможно, начало маркера — ждём закрытия (но не дольше 24 символов)
-        carry = buf.slice(open)
-        buf = buf.slice(0, open)
-      } else if (buf.endsWith('*')) {
-        carry = '*'
-        buf = buf.slice(0, -1)
-      }
-      return replace(buf)
-    },
-    flush(): string {
-      const rest = carry
-      carry = ''
-      return replace(rest)
-    },
-  }
-}
-
 async function systemPrompt(lang: 'ru' | 'uz', catalog: string): Promise<string> {
   const language =
     lang === 'uz'
@@ -111,7 +63,7 @@ async function systemPrompt(lang: 'ru' | 'uz', catalog: string): Promise<string>
 Что такое SEVIMLI (используй как факты):
 - Проверенные магазины и оригинальная корейская косметика (K-beauty): продавцы подтверждают официальный импорт документами, метка «оригинал» ставится по документам поставщика.
 - Живое сообщество: честные отзывы реальных девушек по реальным заказам.
-- Davra — групповые покупки: круг подруг, при сумме от 500 000 сум скидка −10% каждой (её даёт магазин), одна доставка на всех по тарифу магазина.
+- Davra — групповые покупки: круг подруг по ссылке-приглашению (до 6 участниц), общая корзина; при сумме круга от 500 000 сум скидка −10% каждой применяется прямо в заказе (её даёт магазин); каждая оформляет и оплачивает свою часть сама, доставка по тарифу магазина.
 - Проверка подлинности: у товаров с меткой «оригинал» защитная наклейка с кодом, код проверяется на странице «Проверка подлинности».
 - Лояльность: баллы за завершённые покупки, уровни Bronze/Silver/Gold/Platinum, кешбэк баллами 1–5%, баллами можно оплатить до 20% заказа, баллы действуют 6 месяцев.
 - Салоны: запись на маникюр, макияж, массаж, укладку; салон подтверждает запись сам.

@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils'
 import Thumb from '@/components/ui/Thumb'
 import { useSession } from '@/store/session'
 import { loadChats, saveChats, type Conversation } from '@/lib/assistant-storage'
+import { splitCards, stripCards } from '@/lib/assistant-markers'
 
 interface Chip {
   id: string
@@ -53,30 +54,6 @@ interface Message {
 }
 
 let nextId = 1
-
-/** Маркер карточки товара в ответе Севили: [[p:<uuid>]] (ставит сервер вместо кода из каталога). */
-const CARD_MARK = /\[\[p:([0-9a-f-]{36})\]\]/g
-
-type Segment = { kind: 'text'; text: string } | { kind: 'product'; id: string }
-
-/** Текст ответа → куски текста и карточки товаров. */
-function splitCards(text: string): Segment[] {
-  const out: Segment[] = []
-  let last = 0
-  for (const m of text.matchAll(CARD_MARK)) {
-    const i = m.index ?? 0
-    if (i > last) out.push({ kind: 'text', text: text.slice(last, i) })
-    out.push({ kind: 'product', id: m[1] })
-    last = i + m[0].length
-  }
-  if (last < text.length) out.push({ kind: 'text', text: text.slice(last) })
-  return out
-}
-
-/** Текст без маркеров — для заголовков диалогов и истории. */
-function stripCards(text: string): string {
-  return text.replace(CARD_MARK, '').replace(/[ \t]+\n/g, '\n').trim()
-}
 
 /** Уникальный id диалога (браузерный рантайм). */
 function newConvId(): string {
@@ -191,6 +168,29 @@ function PlanCard({ plan }: { plan: RoutinePlan }) {
   )
 }
 
+/** Карточка товара внутри ответа Севили (вне AssistantChat — иначе перемонтируется на каждом чанке стрима). */
+function ProductChip({ p, added, onAdd }: { p: Product; added: boolean; onAdd: (p: Product) => void }) {
+  const { lang, t } = useLang()
+  return (
+    <div className="my-2 flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-2.5 text-left">
+      <Link href={`/product/${p.id}`} className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-neutral-100">
+        <Thumb src={p.images?.[0]} emoji="🧴" alt={productName(p, lang)} />
+      </Link>
+      <div className="min-w-0 flex-1">
+        <Link href={`/product/${p.id}`} className="line-clamp-2 text-sm font-medium text-neutral-900 hover:text-primary">
+          {productName(p, lang)}
+        </Link>
+        <p className="mt-0.5 text-xs text-neutral-500">{p.shop?.name ?? ''}</p>
+        <p className="mt-0.5 text-sm font-bold text-primary">{formatPriceLang(p.price, lang)}</p>
+      </div>
+      <button onClick={() => onAdd(p)} className="btn-primary shrink-0 !px-3 !py-2 text-xs" aria-label={t.common.addToCart}>
+        <ShoppingBag size={14} />
+        <span className="hidden sm:inline">{added ? t.assistant.added : t.common.addToCart}</span>
+      </button>
+    </div>
+  )
+}
+
 export default function AssistantChat({ products }: { products: Product[] }) {
   const { lang, t } = useLang()
   const addItem = useCart((s) => s.addItem)
@@ -241,40 +241,15 @@ export default function AssistantChat({ products }: { products: Product[] }) {
     return map
   }, [products])
 
-  /** Карточка товара внутри ответа Севили. */
-  function ProductChip({ p }: { p: Product }) {
-    return (
-      <div className="my-2 flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-2.5 text-left">
-        <Link href={`/product/${p.id}`} className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-neutral-100">
-          <Thumb src={p.images?.[0]} emoji="🧴" alt={productName(p, lang)} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <Link href={`/product/${p.id}`} className="line-clamp-2 text-sm font-medium text-neutral-900 hover:text-primary">
-            {productName(p, lang)}
-          </Link>
-          <p className="mt-0.5 text-xs text-neutral-500">{p.shop?.name ?? ''}</p>
-          <p className="mt-0.5 text-sm font-bold text-primary">{formatPriceLang(p.price, lang)}</p>
-        </div>
-        <button
-          onClick={() => onAdd(p)}
-          className="btn-primary shrink-0 !px-3 !py-2 text-xs"
-          aria-label={t.common.addToCart}
-        >
-          <ShoppingBag size={14} />
-          <span className="hidden sm:inline">{addedId === p.id ? t.assistant.added : t.common.addToCart}</span>
-        </button>
-      </div>
-    )
-  }
-
   /** Ответ бота: текст + карточки товаров на месте маркеров [[p:<id>]]. */
   function renderBotText(text: string) {
     const segments = splitCards(text)
-    if (segments.length === 1 && segments[0].kind === 'text') return text
+    if (segments.length === 1 && segments[0].kind === 'text') return segments[0].text
     return segments.map((s, i) => {
       if (s.kind === 'text') return <span key={i}>{s.text}</span>
       const p = productById.get(s.id)
-      return p ? <ProductChip key={i} p={p} /> : null
+      // key по id товара: карточка не перемонтируется, пока стрим дописывает текст
+      return p ? <ProductChip key={s.id + ':' + i} p={p} added={addedId === p.id} onAdd={onAdd} /> : null
     })
   }
 

@@ -256,8 +256,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'davra',
     words: /davra|давра|вскладчин|группов|круг подруг|birga/i,
     answer: {
-      ru: '👛 Davra — групповые покупки: создаёте круг, зовёте подруг по ссылке, складываете товары в общую корзину. При сумме от 500 000 сум — скидка −10% каждой и одна доставка на всех. Каждая платит свою часть сама.',
-      uz: '👛 Davra — birgalikda xarid: doira yaratasiz, dugonalarni havola orqali chaqirasiz, mahsulotlarni umumiy savatga qoʻshasiz. 500 000 soʻmdan oshsa — har biriga −10% chegirma va bitta yetkazish.',
+      ru: '👛 Davra — групповые покупки: создаёте круг, зовёте подруг по ссылке, складываете товары в общую корзину. При сумме круга от 500 000 сум — скидка −10% каждой прямо в заказе. Каждая оформляет и платит свою часть сама.',
+      uz: '👛 Davra — birgalikda xarid: doira yaratasiz, dugonalarni havola orqali chaqirasiz, mahsulotlarni umumiy savatga qoʻshasiz. 500 000 soʻmdan oshsa — har biriga −10% chegirma buyurtmada. Har biri oʻz ulushini oʻzi rasmiylashtiradi.',
     },
   },
   {

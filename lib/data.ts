@@ -28,7 +28,11 @@ import type {
   Viewer,
   Order,
   Booking,
+  Circle,
+  CirclePreview,
+  CircleState,
 } from '@/lib/types'
+import { CIRCLE_WITH_ALL, normalizeCircle } from '@/lib/davra-select'
 
 /**
  * Слой доступа к данным для серверных компонентов.
@@ -496,6 +500,55 @@ export async function getMyLikedPostIds(userId: string, postIds: string[]): Prom
     return (data ?? []).map((r: { post_id: string }) => r.post_id)
   } catch {
     return []
+  }
+}
+
+// ---------- Davra ----------
+
+/** Мои круги (RLS отдаёт только те, где я участница), новые сверху. Демо → [] (круг в localStorage). */
+export async function getMyCircles(): Promise<Circle[]> {
+  if (!isSupabaseConfigured()) return []
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('circles')
+      .select(CIRCLE_WITH_ALL)
+      .order('created_at', { ascending: false })
+    if (error) return []
+    return (data ?? []).map(normalizeCircle)
+  } catch {
+    return []
+  }
+}
+
+/** Состояния моих кругов (прогресс к порогу с учётом уже оформленных заказов). */
+export async function getCircleStates(ids: string[]): Promise<Record<string, CircleState>> {
+  if (!isSupabaseConfigured() || ids.length === 0) return {}
+  try {
+    const supabase = await createClient()
+    const entries = await Promise.all(
+      ids.map(async (id) => {
+        const { data, error } = await supabase.rpc('circle_state', { p_circle: id })
+        return [id, error || !data ? null : (data as CircleState)] as const
+      }),
+    )
+    return Object.fromEntries(entries.filter((e): e is readonly [string, CircleState] => e[1] !== null))
+  } catch {
+    return {}
+  }
+}
+
+/** Превью круга по коду приглашения (страница /davra/join/<code>). */
+export async function getCirclePreview(code: string): Promise<CirclePreview | null> {
+  if (!isSupabaseConfigured()) return null
+  if (!/^[a-z0-9]{8,32}$/i.test(code)) return null
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('circle_preview', { p_code: code.toLowerCase() })
+    if (error || !data) return null
+    return data as CirclePreview
+  } catch {
+    return null
   }
 }
 

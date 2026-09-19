@@ -105,8 +105,9 @@ export const useDavra = create<DavraState>()(
   ),
 )
 
-/** Цена позиции с учётом скидки круга (округление до тысячи). */
+/** Цена позиции с учётом скидки круга. */
 export function davraPrice(price: number, discountActive: boolean): number {
   if (!discountActive) return price
-  return Math.round((price * (1 - DAVRA_DISCOUNT)) / 1000) * 1000
+  // как davra_price() в базе: скидка округляется вниз до 100 сум — цена не выше исходной и не 0
+  return price - Math.floor((price * DAVRA_DISCOUNT) / 100) * 100
 }

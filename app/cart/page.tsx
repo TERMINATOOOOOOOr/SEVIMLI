@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, ShoppingBag, Trash2, Plus, Minus, Truck, Gift, Store, MapPin } from 'lucide-react'
+import { CheckCircle2, ShoppingBag, Trash2, Plus, Minus, Truck, Gift, Store, MapPin, Users } from 'lucide-react'
+import { davraPrice } from '@/store/davra'
 import { useCart, selectTotalPrice, type CartItem } from '@/store/cart'
 import { useLoyalty } from '@/store/loyalty'
 import { createClient } from '@/lib/supabase/client'
@@ -44,6 +45,7 @@ export default function CartPage() {
   const { lang, t } = useLang()
   const { items, updateQuantity, removeItem, clearCart } = useCart()
   const subtotal = useCart(selectTotalPrice)
+  const circle = useCart((s) => s.circle)
   const points = useLoyalty((s) => s.points)
   const addPoints = useLoyalty((s) => s.addPoints)
 
@@ -57,6 +59,8 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null)
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [earned, setEarned] = useState(0)
+  /** Скидка круга, которую реально применил сервер (create_order). */
+  const [serverDiscount, setServerDiscount] = useState(0)
 
   // Корзина дробится по магазинам: один заказ — один магазин, доставка считается на каждый.
   const groups = useMemo<ShopGroup[]>(() => {
@@ -74,7 +78,16 @@ export default function CartPage() {
   const pickupAvailable = groups.length > 0 && groups.every((g) => g.shop?.pickup_enabled)
   const effectiveMethod: DeliveryMethod = method === 'pickup' && pickupAvailable ? 'pickup' : 'seller'
   const deliveryTotal = groups.reduce((s, g) => s + deliveryFee(g, effectiveMethod), 0)
-  const total = subtotal + deliveryTotal
+  // Оценка скидки круга по тем же правилам, что и на сервере (решает сервер): только товары из круга,
+  // в пределах количества из круга, и только у магазинов, включивших Davra. Порог доставки — по сумме до скидки.
+  const circleDiscount =
+    circle && circle.discount
+      ? items.reduce((s, it) => {
+          const q = Math.min(it.quantity, circle.discounted[it.product.id] ?? 0)
+          return s + (it.product.price - davraPrice(it.product.price, true)) * q
+        }, 0)
+      : 0
+  const total = subtotal + deliveryTotal - circleDiscount
   const willEarn = pointsForOrder(subtotal, points)
 
   /** Демо: начисляем баллы локально. В боевом режиме баллы приходят после выкупа заказа (сервер). */
@@ -118,10 +131,12 @@ export default function CartPage() {
         p_address: effectiveMethod === 'pickup' ? address.trim() || t.cart.methodPickup : address.trim(),
         p_comment: comment.trim() || null,
         p_delivery_method: effectiveMethod,
-        p_source: 'web',
+        p_source: circle ? 'davra' : 'web',
+        p_circle: circle?.id ?? null,
       })
       if (rpcErr) throw rpcErr
-      const created = (data as { order_id?: string }[] | null) ?? []
+      const created = (data as { order_id?: string; discount?: number }[] | null) ?? []
+      setServerDiscount(created.reduce((sum, o) => sum + Number(o.discount ?? 0), 0))
       const firstId = created[0]?.order_id ?? ''
       clearCart()
       setOrderNumber(firstId ? firstId.slice(0, 8) : '—')
@@ -144,6 +159,13 @@ export default function CartPage() {
           {t.cart.orderNo} <span className="font-semibold text-neutral-800">#{orderNumber}</span>
         </p>
         <p className="mt-1 text-sm text-neutral-400">{t.cart.contact}</p>
+
+        {serverDiscount > 0 && (
+          <div className="mt-5 flex items-center gap-2 rounded-2xl bg-secondary-light px-4 py-3 text-sm font-medium text-secondary">
+            <Users size={18} />
+            {t.cart.circleSaved} {formatPriceLang(serverDiscount, lang)}
+          </div>
+        )}
 
         {earned > 0 && (
           <div className="mt-5 flex items-center gap-2 rounded-2xl bg-primary-light px-4 py-3 text-sm font-medium text-primary">
@@ -379,6 +401,16 @@ export default function CartPage() {
               )
             })}
             <p className="text-xs text-neutral-400">{t.cart.deliveryEstimate}</p>
+            {circle && (
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-secondary-light/60 px-3 py-2 text-xs text-secondary">
+                <span className="flex items-center gap-1.5">
+                  <Users size={14} /> {t.cart.circleLabel} «{circle.name}»
+                </span>
+                <span className="font-semibold">
+                  {circleDiscount > 0 ? `−${formatPriceLang(circleDiscount, lang)}` : circle.discount ? t.cart.circleNoShops : t.cart.circleDiscountOff}
+                </span>
+              </div>
+            )}
 
             <div className="mt-3 flex justify-between border-t border-neutral-200 pt-3 text-lg">
               <span className="font-medium">{t.cart.total}</span>

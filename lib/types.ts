@@ -70,6 +70,8 @@ export interface Shop {
   is_original_verified?: boolean
   /** Демо-магазин из сида (удаляется перед боевым запуском). */
   is_demo?: boolean
+  /** Магазин участвует в Davra: даёт −10% кругам при сумме круга от 500 000 сум. */
+  davra_enabled?: boolean
 }
 
 export interface Product {
@@ -118,6 +120,9 @@ export interface Order {
   delivered_at?: string | null
   dispute_status?: 'none' | 'open' | 'resolved'
   dispute_note?: string | null
+  /** Заказ из круга Davra: скидка круга уже в price_at_order, сумма скидки — discount_total. */
+  circle_id?: string | null
+  discount_total?: number | null
   /** Подгружается через join order_items. */
   items?: OrderItem[]
 }
@@ -222,6 +227,53 @@ export interface ProductQuestion {
   created_at: string
   answers: ProductAnswer[]
   demo_key?: string | null
+}
+
+// ---------- Davra (круг подруг, боевой режим) ----------
+
+export interface CircleMember {
+  circle_id: string
+  user_id: string
+  joined_at: string
+  profile?: PublicProfile | null
+}
+
+export interface CircleItem {
+  id: string
+  circle_id: string
+  user_id: string
+  product_id: string
+  qty: number
+  created_at: string
+  product?: Product | null
+}
+
+export interface Circle {
+  id: string
+  name: string
+  owner_id: string
+  invite_code: string
+  created_at: string
+  members: CircleMember[]
+  items: CircleItem[]
+}
+
+/** Состояние круга (RPC circle_state): корзина + уже оформленное → прогресс к порогу. */
+export interface CircleState {
+  items_total: number
+  ordered_total: number
+  threshold: number
+  discount_on: boolean
+}
+
+/** Превью круга по коду приглашения (RPC circle_preview). */
+export interface CirclePreview {
+  id: string
+  name: string
+  owner_name: string
+  members: number
+  is_full: boolean
+  is_member: boolean
 }
 
 // ---------- Лояльность ----------
