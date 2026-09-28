@@ -1,0 +1,61 @@
+# Будильник против автопаузы Supabase.
+#
+# Бесплатный тариф Supabase усыпляет проект, если 7 дней не было запросов к базе.
+# Раз в сутки дёргаем страницы, которые рендерятся на сервере и читают базу
+# (главная и лента сообщества) — этого хватает, чтобы отсчёт начинался заново.
+#
+# Бонусом получается мониторинг: если страница ответила не 200, задача падает,
+# и GitHub присылает письмо — то есть о лежащем сайте узнаём сразу.
+#
+# Адрес берётся из переменной репозитория SITE_URL (Settings → Actions → Variables),
+# по умолчанию — текущий адрес на Railway. После покупки sevimli.uz достаточно
+# поменять переменную, файл править не нужно.
+#
+# ВАЖНО: GitHub отключает расписание в репозиториях, где 60 дней нет активности,
+# и присылает об этом письмо. Если такое пришло — включить задачу обратно
+# кнопкой на вкладке Actions или сделать любой коммит.
+
+name: keepalive
+
+on:
+  schedule:
+    # 03:17 UTC = 08:17 по Ташкенту, каждый день.
+    # Некруглая минута — расписание GitHub на ровных часах перегружено и запуски задерживаются.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Пинг страниц, читающих базу
+        env:
+          SITE: ${{ vars.SITE_URL || 'https://sevimli-production.up.railway.app' }}
+        run: |
+          set -u
+          base="${SITE%/}"
+          fail=0
+          for path in / /community; do
+            url="$base$path"
+            # --retry: первый запрос может разбудить спящий контейнер и упереться в таймаут
+            code=$(curl -sS -o /dev/null -w '%{http_code} %{time_total}s' \
+                        --max-time 45 --retry 2 --retry-delay 15 "$url" 2>/dev/null || echo '000 -')
+            echo "$url -> $code"
+            case "$code" in
+              200*) ;;
+              *) fail=1 ;;
+            esac
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo '::error::Сайт ответил не 200 — база могла уснуть или прод лежит'
+            exit 1
+          fi
+          echo 'Готово: база получила запросы, отсчёт автопаузы сброшен'
