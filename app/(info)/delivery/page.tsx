@@ -14,9 +14,9 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         h: 'Доставка',
         p: [
           'Доставку выполняет магазин, у которого вы сделали заказ, — своими курьерами или через службы доставки. Точные условия и сроки указаны на странице магазина и при оформлении заказа.',
-          '- Стоимость и срок доставки по Ташкенту указывает магазин (обычно 1–2 дня); у многих — бесплатно от определённой суммы заказа.',
+          '- Стоимость и срок доставки по Ташкенту указывает магазин; у многих — бесплатно от определённой суммы заказа.',
           '- Самовывоз с адреса магазина — бесплатно, если магазин его предлагает.',
-          '- В другие города Узбекистана — почтовыми службами, 2–5 дней, по тарифам службы.',
+          '- В другие города Узбекистана — почтовыми службами, по тарифам и срокам службы.',
           'После передачи заказа курьеру статус в профиле меняется на «Доставляется» — за ним можно следить в разделе «Мои заказы».',
         ],
       },
@@ -55,9 +55,9 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         h: 'Yetkazib berish',
         p: [
           "Yetkazib berishni siz buyurtma qilgan do'kon bajaradi — o'z kuryerlari yoki yetkazib berish xizmatlari orqali. Aniq shartlar va muddatlar do'kon sahifasida va buyurtma rasmiylashtirishda ko'rsatilgan.",
-          "- Toshkent bo'ylab yetkazib berish narxi va muddatini do'kon belgilaydi (odatda 1–2 kun); ko'pchilikda ma'lum summadan bepul.",
+          "- Toshkent bo'ylab yetkazib berish narxi va muddatini do'kon belgilaydi; ko'pchilikda ma'lum summadan bepul.",
           "- Do'kon manzilidan olib ketish — bepul, agar do'kon buni taklif qilsa.",
-          "- O'zbekistonning boshqa shaharlariga — pochta xizmatlari orqali, 2–5 kun, xizmat tariflari bo'yicha.",
+          "- O'zbekistonning boshqa shaharlariga — pochta xizmatlari orqali, xizmat tariflari va muddatlari bo'yicha.",
           "Buyurtma kuryerga topshirilgach, profildagi holat «Yetkazilmoqda»ga o'zgaradi — uni «Buyurtmalarim» bo'limida kuzatish mumkin.",
         ],
       },

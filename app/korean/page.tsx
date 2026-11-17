@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { ShieldCheck, Truck, Tag, Sparkles, MessagesSquare, ArrowRight } from 'lucide-react'
 import { getOriginalProducts } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
-import { formatPriceLang } from '@/lib/format'
 import ProductCard from '@/components/cards/ProductCard'
 import WeightlessBg from '@/components/ui/Weightless'
 
@@ -14,13 +13,8 @@ export const metadata: Metadata = {
 }
 
 export default async function KoreanPage() {
-  const { lang, t } = await getT()
+  const { t } = await getT()
   const products = await getOriginalProducts(24)
-
-  const totalSaving = products.reduce((sum, p) => {
-    if (!p.market_price) return sum
-    return sum + Math.max(0, p.market_price - p.price)
-  }, 0)
 
   const guarantees = [
     { icon: ShieldCheck, title: t.korean.g1t, text: t.korean.g1x },
@@ -58,13 +52,6 @@ export default async function KoreanPage() {
             </Link>
           </div>
 
-          {totalSaving > 0 && (
-            <p className="mt-6 text-sm text-neutral-500">
-              {t.korean.savingsPrefix}{' '}
-              <span className="font-semibold text-secondary">{formatPriceLang(totalSaving, lang)}</span>{' '}
-              {t.korean.savingsSuffix}
-            </p>
-          )}
         </div>
       </section>
 

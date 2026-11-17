@@ -240,8 +240,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'delivery',
     words: /доставк|привез|когда получ|сколько.*(идёт|идет|дней|ждать)|yetkaz|dostavka/i,
     answer: {
-      ru: '🚚 Доставка: её выполняет магазин — своим курьером или через службу доставки, обычно по Ташкенту за 1 день. Стоимость и срок указывает магазин; у многих бесплатно от 200 000 сум. Точные условия видно при оформлении заказа.',
-      uz: '🚚 Yetkazish: uni doʻkon bajaradi — oʻz kuryeri yoki yetkazib berish xizmati orqali, odatda Toshkent boʻylab 1 kunda. Narx va muddatni doʻkon belgilaydi; koʻpchilikda 200 000 soʻmdan bepul. Aniq shartlar buyurtma rasmiylashtirishda koʻrinadi.',
+      ru: '🚚 Доставка: её выполняет магазин — своим курьером или через службу доставки. Стоимость и срок указывает магазин; у многих бесплатно от 200 000 сум. Точные условия видно при оформлении заказа.',
+      uz: '🚚 Yetkazish: uni doʻkon bajaradi — oʻz kuryeri yoki yetkazib berish xizmati orqali. Narx va muddatni doʻkon belgilaydi; koʻpchilikda 200 000 soʻmdan bepul. Aniq shartlar buyurtma rasmiylashtirishda koʻrinadi.',
     },
   },
   {
