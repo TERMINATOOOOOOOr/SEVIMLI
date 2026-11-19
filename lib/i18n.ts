@@ -8,9 +8,6 @@ export const DEFAULT_LANG: Lang = 'ru'
 export const LANG_COOKIE = 'lang'
 
 const ru = {
-  demo: {
-    banner: 'Демо-витрина: магазины, отзывы и цифры — примеры.',
-  },
   waitlist: {
     badge: 'Лист ожидания',
     title: 'Будь первой на SEVIMLI',
@@ -26,8 +23,6 @@ const ru = {
   },
   promo: {
     delivery: 'Доставку выполняет магазин — срок и стоимость указывает продавец',
-    original: 'Проверенные магазины K-beauty',
-    loyalty: 'Карта лояльности — кешбэк до 5%',
   },
   nav: {
     kbeauty: '🇰🇷 K-beauty',
@@ -690,9 +685,6 @@ const ru = {
 export type Dict = typeof ru
 
 const uz: Dict = {
-  demo: {
-    banner: "Demo-vitrina: do'konlar, sharhlar va raqamlar — namunalar.",
-  },
   waitlist: {
     badge: "Kutish ro'yxati",
     title: "SEVIMLIda birinchi bo'ling",
@@ -708,8 +700,6 @@ const uz: Dict = {
   },
   promo: {
     delivery: "Yetkazib berishni do'kon bajaradi — muddat va narxni sotuvchi belgilaydi",
-    original: "Tekshirilgan K-beauty do'konlari",
-    loyalty: 'Sodiqlik kartasi — 5% gacha keshbek',
   },
   nav: {
     kbeauty: '🇰🇷 K-beauty',

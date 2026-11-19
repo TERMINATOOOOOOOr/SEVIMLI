@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
-import { Truck, ShieldCheck, Gift } from 'lucide-react'
+import { Truck } from 'lucide-react'
 import { useLang } from '@/components/LangProvider'
 
-/** Тонкая промо-полоса над шапкой: ключевые обещания платформы. */
+/** Тонкая промо-полоса над шапкой: как устроена доставка. */
 export default function PromoBar() {
   const { t } = useLang()
   return (
@@ -14,17 +13,6 @@ export default function PromoBar() {
           <Truck size={14} className="text-primary" />
           {t.promo.delivery}
         </span>
-        <span className="hidden items-center gap-1.5 text-neutral-300 sm:flex">
-          <ShieldCheck size={14} className="text-secondary" />
-          {t.promo.original}
-        </span>
-        <Link
-          href="/loyalty"
-          className="hidden items-center gap-1.5 text-neutral-300 transition-colors hover:text-primary md:flex"
-        >
-          <Gift size={14} />
-          {t.promo.loyalty}
-        </Link>
       </div>
     </div>
   )
