@@ -1,7 +1,10 @@
+'use client'
+
 import { ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLang } from '@/components/LangProvider'
 
-/** Бейдж гарантии подлинности — ключевой сигнал доверия для K-beauty. */
+/** Метка по документам импорта: ставит администратор площадки. */
 export default function OriginalBadge({
   className,
   size = 'md',
@@ -9,6 +12,7 @@ export default function OriginalBadge({
   className?: string
   size?: 'sm' | 'md'
 }) {
+  const { t } = useLang()
   const sm = size === 'sm'
   return (
     <span
@@ -19,7 +23,7 @@ export default function OriginalBadge({
       )}
     >
       <ShieldCheck size={sm ? 11 : 14} />
-      100% оригинал
+      {t.home.kbPerk1Title}
     </span>
   )
 }

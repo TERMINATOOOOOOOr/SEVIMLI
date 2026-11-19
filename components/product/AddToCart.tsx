@@ -7,13 +7,14 @@ import type { Product } from '@/lib/types'
 import { useCart } from '@/store/cart'
 import { useLang } from '@/components/LangProvider'
 
-export default function AddToCart({ product }: { product: Product }) {
+export default function AddToCart({ product, expired = false }: { product: Product; expired?: boolean }) {
   const router = useRouter()
   const { t } = useLang()
   const addItem = useCart((s) => s.addItem)
   const [qty, setQty] = useState(1)
 
   const outOfStock = product.stock <= 0
+  const blocked = outOfStock || expired
 
   function buyNow() {
     // Тихо: иначе боковая корзина откроется поверх страницы оформления
@@ -42,7 +43,9 @@ export default function AddToCart({ product }: { product: Product }) {
             <Plus size={16} />
           </button>
         </div>
-        {outOfStock ? (
+        {expired ? (
+          <span className="text-sm font-medium text-red-500">{t.product.expiredBuy}</span>
+        ) : outOfStock ? (
           <span className="text-sm font-medium text-red-500">{t.product.outOfStock}</span>
         ) : (
           <span className="text-sm text-neutral-400">
@@ -54,13 +57,13 @@ export default function AddToCart({ product }: { product: Product }) {
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           onClick={() => addItem(product, qty)}
-          disabled={outOfStock}
+          disabled={blocked}
           className="btn-primary flex-1"
         >
           <ShoppingBag size={18} />
           {t.common.addToCart}
         </button>
-        <button onClick={buyNow} disabled={outOfStock} className="btn-outline flex-1">
+        <button onClick={buyNow} disabled={blocked} className="btn-outline flex-1">
           {t.product.buyNow}
         </button>
       </div>

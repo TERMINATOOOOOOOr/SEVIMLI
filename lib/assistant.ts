@@ -248,8 +248,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'authentic',
     words: /оригинал|подлин|подделк|фейк|настоящ|asl|orijinal|soxta|haqiqiy/i,
     answer: {
-      ru: '🛡️ Подлинность: товары с меткой «100% оригинал» приходят с защитной наклейкой и уникальным кодом. Код проверяется на странице «Проверка подлинности» — увидите поставку и срок годности. За подделку продавца отключают навсегда.',
-      uz: '🛡️ Haqiqiylik: «100% original» belgili mahsulotlar himoya stikeri va noyob kod bilan keladi. Kod «Haqiqiylikni tekshirish» sahifasida tekshiriladi. Soxta mahsulot uchun sotuvchi butunlay oʻchiriladi.',
+      ru: '🛡️ Подлинность: метку «100% оригинал» получают товары магазинов, подтвердивших SEVIMLI происхождение товара документами; включает её администратор площадки. В карточке товара виден срок годности — при получении сверьте его и код партии на упаковке.',
+      uz: '🛡️ Haqiqiylik: «100% original» belgisini kelib chiqishini SEVIMLIga hujjatlar bilan tasdiqlagan doʻkonlarning mahsulotlari oladi; belgini platforma administratori yoqadi. Mahsulot kartochkasida yaroqlilik muddati koʻrinadi — qabul qilishda uni va qadoqdagi partiya kodini solishtiring.',
     },
   },
   {
@@ -296,7 +296,7 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'kbeauty',
     words: /k-?beauty|корейск|корея|koreys|koreya/i,
     answer: {
-      ru: '🇰🇷 K-beauty: магазины с официальным импортом из Кореи — тот же оригинал, что в бутиках, но дешевле, потому что продавцы конкурируют прямо на площадке. Подделки исключены проверкой подлинности.',
+      ru: '🇰🇷 K-beauty: магазины с официальным импортом из Кореи — тот же оригинал, что в бутиках, но дешевле, потому что продавцы конкурируют прямо на площадке.',
       uz: '🇰🇷 K-beauty: Koreyadan rasmiy import qiluvchi doʻkonlar — butiklardagidek original, lekin arzonroq, chunki sotuvchilar platformada raqobatlashadi.',
     },
   },

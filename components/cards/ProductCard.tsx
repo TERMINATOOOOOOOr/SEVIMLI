@@ -6,6 +6,8 @@ import type { Product } from '@/lib/types'
 import { formatPriceLang, discountPercent } from '@/lib/format'
 import { categoryEmoji } from '@/lib/categories'
 import { productName } from '@/lib/product-i18n'
+import { formatExpiry, expiryState, todayTashkent } from '@/lib/expiry'
+import { useHasMounted } from '@/lib/hooks'
 import { useCart } from '@/store/cart'
 import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
@@ -13,16 +15,20 @@ import OriginalBadge from '@/components/ui/OriginalBadge'
 import Tilt3D from '@/components/ui/Tilt3D'
 
 const NEW_DAYS = 14
-/** Момент загрузки модуля: «новинка» считается от него, а не от каждого рендера. */
-const NOW = Date.now()
+/** Момент загрузки модуля в браузере: «новинка» считается от него, а не от каждого рендера. */
+const LOADED_AT = Date.now()
 
 export default function ProductCard({ product }: { product: Product }) {
   const addItem = useCart((s) => s.addItem)
   const { lang, t } = useLang()
+  // «Новинка» и «истёк» зависят от текущего времени — считаем только в браузере,
+  // иначе разметка сервера и клиента разойдётся
+  const mounted = useHasMounted()
   const discount = discountPercent(product.price, product.old_price)
-  const marketSaving = discountPercent(product.price, product.market_price)
   const isNew =
-    !discount && NOW - new Date(product.created_at).getTime() < NEW_DAYS * 86400000
+    mounted && !discount && LOADED_AT - new Date(product.created_at).getTime() < NEW_DAYS * 86400000
+  const expired = mounted && expiryState(product, todayTashkent()) === 'expired'
+  const expiryText = formatExpiry(product, t.product)
   const name = productName(product, lang)
 
   return (
@@ -73,12 +79,13 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          <span className="mt-1 block min-h-4 text-xs font-medium text-secondary">
-            {marketSaving ? `${t.common.cheaperPrefix} ${marketSaving}%` : ''}
+          <span className={`mt-1 block min-h-4 text-xs ${expired ? 'font-medium text-red-600' : 'text-neutral-500'}`}>
+            {expired ? t.product.expiredBuy : expiryText}
           </span>
 
           <button
             onClick={() => addItem(product)}
+            disabled={expired}
             className="btn-primary mt-2 w-full !py-2.5 text-sm"
           >
             <ShoppingBag size={16} />

@@ -1,11 +1,11 @@
 import type { Order, Product } from '@/lib/types'
 
 /**
- * Демо-движок «умных» фич: история цен, сравнение с рынком, проверка
- * подлинности, аналитика продавца. Всё детерминировано (seed от id),
+ * Демо-движок «умных» фич: история цен, сравнение с рынком, аналитика
+ * продавца. Всё детерминировано (seed от id),
  * чтобы данные не «прыгали» между рендерами и выглядели правдоподобно.
  * При подключении реальной базы заменяется таблицами price_history,
- * market_offers, authenticity_codes и событийной аналитикой.
+ * market_offers и событийной аналитикой.
  */
 
 // ---------- Seeded PRNG (mulberry32) ----------
@@ -106,8 +106,8 @@ export function getMarketComparison(product: Product): MarketOffer[] | null {
     {
       source: { ru: 'SEVIMLI · Seoul Beauty', uz: 'SEVIMLI · Seoul Beauty' },
       note: {
-        ru: 'официальный импорт, гарантия подлинности',
-        uz: 'rasmiy import, asllik kafolati',
+        ru: 'импорт, документы магазина',
+        uz: "import, do'kon hujjatlari",
       },
       price: product.price,
       checked: daysAgo(0),
@@ -128,8 +128,8 @@ export function getMarketComparison(product: Product): MarketOffer[] | null {
     {
       source: { ru: 'Онлайн-маркетплейсы UZ', uz: 'UZ onlayn-marketpleyslar' },
       note: {
-        ru: 'медианная цена листингов, без проверки подлинности',
-        uz: 'listinglar mediana narxi, asllik tekshiruvisiz',
+        ru: 'медианная цена листингов, без проверки документов',
+        uz: 'listinglar mediana narxi, hujjatlar tekshiruvisiz',
       },
       price: round1000(mp * (0.9 + rnd() * 0.06)),
       checked: daysAgo(1 + Math.floor(rnd() * 3)),
@@ -144,58 +144,6 @@ export function getMarketComparison(product: Product): MarketOffer[] | null {
       checked: daysAgo(3 + Math.floor(rnd() * 4)),
     },
   ]
-}
-
-// ---------- 3. Проверка подлинности ----------
-
-export interface VerifyRecord {
-  code: string
-  productId: string
-  batch: string
-  /** Демо-данные официального ввоза. */
-  importInfo: {
-    supplier: string
-    declaration: string
-    importedAt: string
-    expiresAt: string
-  }
-}
-
-/** Демо-реестр кодов защитных наклеек (в проде — таблица + генерация кодов). */
-export const VERIFY_CODES: VerifyRecord[] = [
-  'k1:7F3A:B240611',
-  'k2:9D21:B240705',
-  'k3:4C8E:B240528',
-  'k4:1A6F:B240619',
-  'k5:8E2B:B240701',
-  'k6:5D9C:B240514',
-  'k7:3B7D:B240622',
-  'k8:6F4A:B240630',
-].map((row) => {
-  const [pid, tail, batch] = row.split(':')
-  return {
-    code: `SVM-${pid.toUpperCase()}-${tail}`,
-    productId: pid,
-    batch,
-    importInfo: {
-      supplier: 'Демо-поставщик (пример записи реестра)',
-      declaration: 'Пример — в боевом реестре здесь номер документа поставщика',
-      importedAt: '2026-06-28',
-      expiresAt: '2028-06-01',
-    },
-  }
-})
-
-export type VerifyResult =
-  | { status: 'ok'; record: VerifyRecord; checks?: number; firstChecked?: string }
-  | { status: 'not_found' }
-  | { status: 'bad_format' }
-
-export function verifyCode(input: string): VerifyResult {
-  const code = input.trim().toUpperCase().replace(/\s+/g, '')
-  if (!/^SVM-[A-Z0-9]{2,4}-[A-Z0-9]{4}$/.test(code)) return { status: 'bad_format' }
-  const record = VERIFY_CODES.find((r) => r.code === code)
-  return record ? { status: 'ok', record } : { status: 'not_found' }
 }
 
 // ---------- 4. Аналитика продавца ----------

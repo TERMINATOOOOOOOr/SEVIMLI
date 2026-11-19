@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Store, ArrowRight, Truck, ShieldCheck } from 'lucide-react'
+import { Store, ArrowRight, Truck } from 'lucide-react'
 import {
   getProductById,
   getReviewsForProduct,
@@ -13,9 +13,10 @@ import {
 } from '@/lib/data'
 import { getT } from '@/lib/lang-server'
 import { isSupabaseConfigured } from '@/lib/utils'
-import { productName, productDesc, cityName } from '@/lib/product-i18n'
+import { productName, productDesc, cityName, countryName } from '@/lib/product-i18n'
 import { formatPriceLang, discountPercent } from '@/lib/format'
 import { categoryEmoji, categoryLabel } from '@/lib/categories'
+import { expiryState, todayTashkent } from '@/lib/expiry'
 import ProductGallery from '@/components/product/ProductGallery'
 import AddToCart from '@/components/product/AddToCart'
 import DavraButton from '@/components/davra/DavraButton'
@@ -26,6 +27,7 @@ import ReviewCard from '@/components/cards/ReviewCard'
 import StarRating from '@/components/ui/StarRating'
 import OriginalBadge from '@/components/ui/OriginalBadge'
 import Thumb from '@/components/ui/Thumb'
+import TrustBlock from '@/components/product/TrustBlock'
 
 export async function generateMetadata({
   params,
@@ -57,7 +59,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const live = isSupabaseConfigured() // демо: Q&A и обсуждения из localStorage, пропсы пустые
 
   const discount = discountPercent(product.price, product.old_price)
-  const marketSaving = discountPercent(product.price, product.market_price)
+  // Страница рендерится на сервере: «сегодня» по Ташкенту, как в базе
+  const today = todayTashkent()
+  const expired = expiryState(product, today) === 'expired'
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
@@ -98,7 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               )}
               {product.country && (
                 <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-500">
-                  {product.country}
+                  {countryName(product.country, lang)}
                 </span>
               )}
               {product.is_original && <OriginalBadge />}
@@ -129,13 +133,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
 
-          {marketSaving && product.market_price && (
-            <p className="mt-2 text-sm text-secondary">
-              {t.product.marketPrefix} {formatPriceLang(product.market_price, lang)} {t.product.marketSuffix}{' '}
-              {marketSaving}%
-            </p>
-          )}
-
           {description && <p className="mt-5 leading-relaxed text-neutral-600">{description}</p>}
 
           {/* Обещания платформы */}
@@ -143,17 +140,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-700">
               <Truck size={14} className="text-primary" /> {t.promo.delivery}
             </span>
-            {product.is_original && (
-              <Link
-                href="/verify"
-                className="inline-flex items-center gap-1.5 rounded-full bg-secondary-light px-3 py-1.5 text-xs font-medium text-secondary transition-colors hover:bg-secondary hover:text-white"
-              >
-                <ShieldCheck size={14} /> {t.product.authenticity} →
-              </Link>
-            )}
           </div>
 
-          <AddToCart product={product} />
+          <TrustBlock product={product} t={t} today={today} />
+
+          <AddToCart product={product} expired={expired} />
           <DavraButton product={product} />
 
           {/* Блок магазина */}

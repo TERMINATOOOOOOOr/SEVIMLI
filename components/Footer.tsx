@@ -15,7 +15,7 @@ export default function Footer() {
         { href: '/community', label: t.footer.community },
         { href: '/davra', label: t.davra.title },
         { href: '/assistant', label: t.assistant.fabLabel },
-        { href: '/verify', label: t.verify.title },
+        { href: '/trust', label: t.footer.trust },
         { href: '/loyalty', label: t.footer.loyalty },
         { href: '/delivery', label: t.footer.delivery },
       ],

@@ -4,21 +4,29 @@ import { useRef, useState } from 'react'
 import { X, Upload, Trash2 } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
-import { CATEGORY_LABEL } from '@/lib/categories'
+import { CATEGORY_LABEL, expiryMode, defaultPrecision } from '@/lib/categories'
+import { COUNTRIES, countryName } from '@/lib/product-i18n'
+import { mapTrustError } from '@/lib/trust-errors'
+import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
+import ExpiryFields, { type ExpiryValue } from '@/components/seller/ExpiryFields'
 
 interface Props {
   shopId: string
   initial: Product | null
   onClose: () => void
   onSaved: (product: Product) => void
+  /** Импорт магазина подтверждён администратором — можно ставить метку «оригинал». */
+  originalVerified: boolean
 }
 
 const MAX_IMAGES = 5
 
-export default function ProductForm({ shopId, initial, onClose, onSaved }: Props) {
+export default function ProductForm({ shopId, initial, onClose, onSaved, originalVerified }: Props) {
   const supabase = createClient()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { lang, t } = useLang()
+  const s = t.seller
 
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
@@ -26,6 +34,18 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
   const [oldPrice, setOldPrice] = useState(initial?.old_price?.toString() ?? '')
   const [categorySlug, setCategorySlug] = useState(initial?.category_slug ?? 'clothes')
   const [stock, setStock] = useState(initial?.stock?.toString() ?? '0')
+  // Остаток при правке уходит, только если его меняли: иначе затёрли бы списания заказов
+  const [stockTouched, setStockTouched] = useState(false)
+  const [brand, setBrand] = useState(initial?.brand ?? '')
+  const [country, setCountry] = useState(initial?.country ?? '')
+  const [isOriginal, setIsOriginal] = useState(Boolean(initial?.is_original))
+  const [expiry, setExpiry] = useState<ExpiryValue>({
+    expires_on: initial?.expires_on ?? null,
+    expires_precision: initial?.expires_precision ?? defaultPrecision(initial?.category_slug ?? 'clothes'),
+    made_on: initial?.made_on ?? null,
+    pao_months: initial?.pao_months ?? null,
+    no_expiry: Boolean(initial?.no_expiry),
+  })
   const [images, setImages] = useState<string[]>(initial?.images ?? [])
   const [files, setFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
@@ -45,7 +65,7 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    if (!user) throw new Error('Сессия истекла — войдите заново')
+    if (!user) throw new Error(lang === 'uz' ? 'Sessiya tugadi — qaytadan kiring' : 'Сессия истекла — войдите заново')
     for (const file of files) {
       // Имя файла не доверяем (кириллица/пробелы ломают ключ) — берём только безопасное расширение
       const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg'
@@ -61,22 +81,38 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
     return urls
   }
 
+  const mode = expiryMode(categorySlug)
+  const expiryGiven = expiry.no_expiry || expiry.expires_on !== null || expiry.made_on !== null
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (mode === 'required' && !expiryGiven) {
+      setError(s.expiryNeed)
+      return
+    }
     setSaving(true)
     try {
       const uploaded = files.length ? await uploadFiles() : []
-      const payload = {
+      const keepExpiry = mode !== 'hidden'
+      const payload: Record<string, unknown> = {
         shop_id: shopId,
         name,
         description: description || null,
         price: Number(price),
         old_price: oldPrice ? Number(oldPrice) : null,
         category_slug: categorySlug,
-        stock: Number(stock) || 0,
         images: [...images, ...uploaded],
+        brand: brand.trim() || null,
+        country: country || null,
+        is_original: originalVerified ? isOriginal : Boolean(initial?.is_original),
+        expires_on: keepExpiry ? expiry.expires_on : null,
+        expires_precision: keepExpiry && expiry.expires_on ? expiry.expires_precision : 'month',
+        made_on: keepExpiry ? expiry.made_on : null,
+        pao_months: keepExpiry && expiry.made_on ? expiry.pao_months : null,
+        no_expiry: keepExpiry ? expiry.no_expiry : false,
       }
+      if (!initial || stockTouched) payload.stock = Number(stock) || 0
 
       const query = initial
         ? supabase.from('products').update(payload).eq('id', initial.id).select('*').single()
@@ -86,7 +122,10 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
       if (dbErr) throw dbErr
       onSaved(data as Product)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить товар')
+      const mapped = mapTrustError(err)
+      if (mapped.code === 'product_limit') setError(s.errLimit)
+      else if (err instanceof Error) setError(err.message)
+      else setError(s.errSave)
     } finally {
       setSaving(false)
     }
@@ -143,9 +182,56 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-neutral-700">На складе</label>
-              <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} className="input" />
+              <input
+                type="number"
+                value={stock}
+                onChange={(e) => {
+                  setStock(e.target.value)
+                  setStockTouched(true)
+                }}
+                className="input"
+              />
             </div>
           </div>
+
+          {mode !== 'hidden' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">{s.brand}</label>
+                <input value={brand} onChange={(e) => setBrand(e.target.value)} maxLength={60} className="input" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-neutral-700">{s.country}</label>
+                <select value={country} onChange={(e) => setCountry(e.target.value)} className="input">
+                  <option value="">{s.countryNone}</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {countryName(c.value, lang)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {mode !== 'hidden' && (
+            <ExpiryFields value={expiry} onChange={setExpiry} required={mode === 'required'} />
+          )}
+
+          {mode !== 'hidden' && (
+            <div className="rounded-xl bg-neutral-50 p-3">
+              <label className={`flex items-center gap-2 text-sm font-medium ${originalVerified ? 'text-neutral-800' : 'text-neutral-400'}`}>
+                <input
+                  type="checkbox"
+                  checked={isOriginal}
+                  disabled={!originalVerified}
+                  onChange={(e) => setIsOriginal(e.target.checked)}
+                />
+                {s.original}
+              </label>
+              <p className="mt-1 text-xs text-neutral-500">{originalVerified ? s.originalOn : s.originalOff}</p>
+            </div>
+          )}
 
           {/* Фото */}
           <div>
@@ -167,7 +253,7 @@ export default function ProductForm({ shopId, initial, onClose, onSaved }: Props
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               multiple
               hidden
               onChange={(e) => addFiles(e.target.files)}

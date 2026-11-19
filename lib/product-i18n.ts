@@ -68,7 +68,7 @@ const SHOP_UZ: Record<string, string> = {
   s4: "Go'zallik saloni: manikyur, qosh, makiyaj, massaj. Onlayn yozilish.",
   s5: "Chaqaloqlar uchun hamma narsa: kiyim, o'yinchoqlar, aravachalar.",
   s6: "Shinam uy uchun dekor va uy tekstili.",
-  s7: "Koreys kosmetikasining rasmiy importi. 100% original, asllik kafolati, Toshkent bo'ylab bepul yetkazib berish.",
+  s7: "Koreys kosmetikasi importi: mahsulot kelib chiqishi hujjatlar bilan tasdiqlangan (demo-do'kon).",
   s8: "Litsenziyalangan dorixona: vitaminlar, dermokosmetika, salomatlik mahsulotlari. Chatda farmatsevt maslahati.",
   s9: "Bozordagidek fermer mahsulotlari: asal, yong'oqlar, mavsumiy mevalar. Buyurtma kuni yetkazib berish.",
 }
@@ -97,6 +97,26 @@ const CITY_UZ: Record<string, string> = {
 /** Название города на текущем языке. */
 export function cityName(city: string, lang: Lang): string {
   return lang === 'uz' ? (CITY_UZ[city] ?? city) : city
+}
+
+/** Страны производства: значение хранится по-русски (так `/korean` находит «Корея»). */
+export const COUNTRIES: { value: string; uz: string }[] = [
+  { value: 'Корея', uz: 'Koreya' },
+  { value: 'Япония', uz: 'Yaponiya' },
+  { value: 'Китай', uz: 'Xitoy' },
+  { value: 'Турция', uz: 'Turkiya' },
+  { value: 'Россия', uz: 'Rossiya' },
+  { value: 'Узбекистан', uz: "O'zbekiston" },
+  { value: 'Франция', uz: 'Fransiya' },
+  { value: 'Италия', uz: 'Italiya' },
+  { value: 'Германия', uz: 'Germaniya' },
+  { value: 'США', uz: 'AQSh' },
+]
+
+/** Название страны на текущем языке. */
+export function countryName(country: string, lang: Lang): string {
+  if (lang !== 'uz') return country
+  return COUNTRIES.find((c) => c.value === country)?.uz ?? country
 }
 
 /** Описание магазина на текущем языке. */

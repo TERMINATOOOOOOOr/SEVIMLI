@@ -41,7 +41,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Маркировка «100% оригинал»',
         p: [
-          'Знак «100% оригинал» на товарах K-beauty означает, что магазин подтвердил платформе официальное происхождение товара документами. Если подлинность товара с такой маркировкой не подтвердится, магазин навсегда отключается от площадки, а платформа поможет вам добиться возврата от продавца.',
+          'Метку «100% оригинал» получают товары магазинов, которые подтвердили SEVIMLI происхождение товара документами; включает её администратор площадки. Если администратор снимает подтверждение импорта, метка пропадает со всех товаров магазина.',
         ],
       },
     ],
@@ -82,7 +82,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: '«100% original» belgisi',
         p: [
-          "K-beauty mahsulotlaridagi «100% original» belgisi do'kon mahsulotning rasmiy kelib chiqishini platformaga hujjatlar bilan tasdiqlaganini anglatadi. Agar bunday belgili mahsulotning aslligi tasdiqlanmasa, do'kon platformadan butunlay o'chiriladi, platforma esa sotuvchidan pulni qaytarib olishga yordam beradi.",
+          "«100% original» belgisini kelib chiqishini SEVIMLIga hujjatlar bilan tasdiqlagan do'konlarning mahsulotlari oladi; belgini platforma administratori yoqadi. Administrator import tasdig'ini olib tashlasa, belgi do'konning barcha mahsulotlaridan yo'qoladi.",
         ],
       },
     ],

@@ -11,7 +11,7 @@ const key = (x: { id: string; demo_key?: string | null }) => x.demo_key ?? x.id
  */
 
 const POST_UZ: Record<string, string> = {
-  cp1: "Qizlar, nihoyat original COSRXni normal narxda qayerdan olishni topdim 🙌 Mucinli essensiya — teri bir haftada rostdan ham namlanib qoldi. SEVIMLIdan oldim, himoya stikeri bilan keldi.",
+  cp1: "Qizlar, nihoyat original COSRXni normal narxda qayerdan olishni topdim 🙌 Mucinli essensiya — teri bir haftada rostdan ham namlanib qoldi. SEVIMLIdan oldim: qutidagi yaroqlilik muddati kartochkadagi bilan mos keldi.",
   cp2: "Yog'li teri uchun oq iz qoldirmaydigan sanskrin maslahat berasizlarmi? Koreyscha narsa xohlayman 🌸",
   cp3: "Parvarish bo'yicha layfhak: Anua Heartleaf tonerini paxta disk bilan surtmasdan, qo'lda yengil urib suring — ta'sirlanish kamroq bo'ladi. Sezgir terim uchun holy-grail 💚",
   cp4: "SEVIMLIdan Aurora ko'ylagi — bu pulga sifati zo'r. Ikki haftadan beri kiyyapman, mato g'ijimlanmaydi. Yoz uchun tavsiya qilaman! 👗",
@@ -20,14 +20,14 @@ const POST_UZ: Record<string, string> = {
   cp7: "SEVIMLI orqali yozilib Malika Beautyga bordim — manikyur olov, usta ozoda, yozilish qo'ng'iroqsiz va kutishsiz. Qoplama ikki haftadan beri turibdi 💅",
   cp8: "Uy shinamligi uchun maslahat: to'qilgan pled + bir-ikki aromatik sham — kuz oqshomlari butunlay boshqacha bo'ladi ✨ SEVIMLIdagi Cozy pledi kutganimdan ham yumshoq, umuman qichitmaydi.",
   cp9: "Qizlar, bir yoshga to'layotgan qizchaga nima sovg'a qilsam bo'ladi? Rivojlantiruvchi gilamcha olsammi deb o'ylayapman — kimda bor, olishga arziydimi? Yoki boshqa narsa yaxshiroqmi? 🎁",
-  cp10: "Original K-beautyni qanday ajratish mumkin: 1) qutida himoya stikeri 2) QR-kod brend saytiga olib boradi 3) batch-kod quti va flakonda bir xil 4) narx «bozordan 3 barobar arzon» emas. SEVIMLIda bularni sotuvdan oldin tekshirishadi — lekin o'zingiz ham tekshirib ko'rganingiz foydali 😉",
+  cp10: "K-beauty olganda nimani tekshiraman: 1) quti va flakondagi partiya kodi bir xil 2) yaroqlilik muddati tugab qolmagan 3) plyonka va qadoq butun 4) narx «bozordan 3 barobar arzon» emas. SEVIMLIda yaroqlilik muddati mahsulot kartochkasidayoq ko'rinadi — qulay 😉",
   cp11: "Qizlar, Oud Rose parfyumi — bu boshqa dunyo 😍 Sharqona, lekin og'ir emas, shleyfi nozik. Kechqurun buyurtma qildim — ertalab olib kelishdi. Bu narxga savdo markazida qaraydigan narsa ham yo'q.",
   cp12: "Kuzgi layfhak: ertalab bir qoshiq tog' asali + 95-ko'k choy — hech qanday shamollash yo'lamaydi. Asalni SEVIMLI orqali Yashil Bozordan olaman, o'sha kuniyoq olib kelishadi 🍯",
 }
 
 const COMMENT_UZ: Record<string, string> = {
   cc1: "Originalni qalbakidan qanday ajratsa bo'ladi?",
-  cc2: "Rasmiysida QR-kod va stiker bo'ladi, bunda hammasi bor edi 👍",
+  cc2: "Men quti va flakondagi partiya kodi bilan yaroqlilik muddatini solishtiraman — ular bir xil bo'lishi kerak. Bunda hammasi mos keldi 👍",
   cc3: "Beauty of Joseon Relief Sun — ideal! Shu yerda bor ekan.",
   cc4: "Qo'shilaman, maslahat bilan oldim, mamnunman ✨",
   cc5: "Qaysi o'lchamda oldingiz? O'lchami to'g'ri keldimi?",
@@ -48,7 +48,7 @@ const QUESTION_UZ: Record<string, string> = {
 }
 
 const ANSWER_UZ: Record<string, string> = {
-  qa1: "Ha, 100% original — to'g'ridan-to'g'ri rasmiy import. Har bir qadoqda himoya stikeri va ishlab chiqaruvchi QR-kodi bor. Asllik kafolatini beramiz.",
+  qa1: "Ha, bu original: import hujjatlarini SEVIMLIga ko'rsatganmiz. Yaroqlilik muddati mahsulot kartochkasida ko'rsatilgan — u qadoqdagi bilan bir xil.",
   qa2: "Meniki quruq, qishda krem ostiga suraman — qutqaradi 🙌",
   qa3: "Ha, Toshkent bo'ylab bepul, odatda 1 kun ichida yetkazamiz.",
 }
@@ -57,7 +57,7 @@ const REVIEW_UZ: Record<string, string> = {
   r1: "Ko'ylak zo'r, matosi yoqimli, quyib qo'ygandek o'tirdi!",
   r2: "Chiroyli, lekin yetkazib berish biroz kechikdi.",
   r3: "2 haftada teri sezilarli darajada tekislandi. Tavsiya qilaman!",
-  r4: "100% original, qutisi himoya stikeri va QR bilan keldi. Birinchi surtishdayoq teri namlandi.",
+  r4: "Original, qutidagi yaroqlilik muddati kartochka bilan mos keldi. Birinchi surtishdayoq teri namlandi.",
   r5: "Eng zo'r sanskrin! Bu yerda oflayn do'konlardan rostdan ham arzon. Bir kunda bepul olib kelishdi.",
   r6: "Ifori maftunkor, ertalabdan kechgacha turadi. Turmush o'rtog'imga ham yoqdi 😄",
   r7: "Qulay, yengil, o'lchami aniq. Ikki haftadan beri kiyyapman — hali ham oppoq 😅",

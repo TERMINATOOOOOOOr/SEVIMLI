@@ -7,17 +7,28 @@ import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/format'
 import { categoryEmoji } from '@/lib/categories'
 import { cn } from '@/lib/utils'
+import { formatExpiry, expiryState, todayTashkent } from '@/lib/expiry'
+import { mapTrustError } from '@/lib/trust-errors'
+import { useHasMounted } from '@/lib/hooks'
+import { useLang } from '@/components/LangProvider'
 import Thumb from '@/components/ui/Thumb'
 import ProductForm from '@/components/seller/ProductForm'
 
 export default function ProductsManager({
   shopId,
   initialProducts,
+  originalVerified,
 }: {
   shopId: string
   initialProducts: Product[]
+  /** Импорт магазина подтверждён — форма разрешает метку «оригинал». */
+  originalVerified: boolean
 }) {
   const supabase = createClient()
+  const { t } = useLang()
+  const mounted = useHasMounted()
+  const today = mounted ? todayTashkent() : ''
+  const [error, setError] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
@@ -41,13 +52,24 @@ export default function ProductsManager({
 
   async function remove(id: string) {
     if (!confirm('Удалить товар?')) return
-    await supabase.from('products').delete().eq('id', id)
+    setError(null)
+    const { error: dbErr } = await supabase.from('products').delete().eq('id', id)
+    if (dbErr) {
+      // Товар с заказами или отзывами база не удаляет — его можно только скрыть
+      setError(mapTrustError(dbErr).code === 'product_has_history' ? t.seller.errHasOrders : t.seller.errSave)
+      return
+    }
     setProducts((prev) => prev.filter((p) => p.id !== id))
   }
 
   async function toggle(p: Product) {
     const next = !p.is_active
-    await supabase.from('products').update({ is_active: next }).eq('id', p.id)
+    setError(null)
+    const { error: dbErr } = await supabase.from('products').update({ is_active: next }).eq('id', p.id)
+    if (dbErr) {
+      setError(t.seller.errSave)
+      return
+    }
     setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, is_active: next } : x)))
   }
 
@@ -59,6 +81,8 @@ export default function ProductsManager({
           <Plus size={18} /> Добавить товар
         </button>
       </div>
+
+      {error && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>}
 
       {products.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-neutral-300 py-16 text-center text-neutral-400">
@@ -72,6 +96,7 @@ export default function ProductsManager({
                 <th className="p-3 font-medium">Товар</th>
                 <th className="hidden p-3 font-medium sm:table-cell">Цена</th>
                 <th className="hidden p-3 font-medium sm:table-cell">Склад</th>
+                <th className="hidden p-3 font-medium md:table-cell">{t.seller.colExpiry}</th>
                 <th className="p-3 font-medium">Статус</th>
                 <th className="p-3 text-right font-medium">Действия</th>
               </tr>
@@ -84,11 +109,17 @@ export default function ProductsManager({
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-neutral-200">
                         <Thumb src={p.images?.[0]} emoji={categoryEmoji(p.category_slug)} />
                       </div>
-                      <span className="line-clamp-1 font-medium text-neutral-800">{p.name}</span>
+                      <div className="min-w-0">
+                        <span className="line-clamp-1 font-medium text-neutral-800">{p.name}</span>
+                        {today && expiryState(p, today) === 'expired' && (
+                          <span className="mt-0.5 block text-xs font-medium text-red-600">{t.seller.badgeExpired}</span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="hidden p-3 sm:table-cell">{formatPrice(p.price)}</td>
                   <td className="hidden p-3 sm:table-cell">{p.stock}</td>
+                  <td className="hidden p-3 text-neutral-600 md:table-cell">{formatExpiry(p, t.product) || '—'}</td>
                   <td className="p-3">
                     <span
                       className={cn(
@@ -120,7 +151,13 @@ export default function ProductsManager({
       )}
 
       {formOpen && (
-        <ProductForm shopId={shopId} initial={editing} onClose={() => setFormOpen(false)} onSaved={onSaved} />
+        <ProductForm
+          shopId={shopId}
+          initial={editing}
+          onClose={() => setFormOpen(false)}
+          onSaved={onSaved}
+          originalVerified={originalVerified}
+        />
       )}
     </div>
   )

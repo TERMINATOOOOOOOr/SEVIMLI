@@ -49,10 +49,10 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         ],
       },
       {
-        h: '6. Маркировка «100% оригинал» и проверка продавцов',
+        h: '6. Маркировка «100% оригинал»',
         p: [
-          'Платформа проверяет Продавцов при подключении (регистрационные документы, происхождение товара). Маркировка «100% оригинал» присваивается товарам, официальное происхождение которых Продавец подтвердил документами.',
-          'Если подлинность такого товара не подтверждается, Продавец навсегда отключается от Платформы, информация о нём передаётся уполномоченным органам, а Платформа содействует Покупателю в возврате средств от Продавца.',
+          'Маркировка «100% оригинал» присваивается товарам Продавцов, которые подтвердили Платформе происхождение товара документами. Маркировку включает администратор Платформы; Продавец сам её не ставит.',
+          'Если администратор Платформы отключает Продавцу подтверждение происхождения товара, маркировка снимается со всех его товаров.',
         ],
       },
       {
@@ -113,10 +113,10 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         ],
       },
       {
-        h: '6. «100% original» belgisi va sotuvchilarni tekshirish',
+        h: '6. «100% original» belgisi',
         p: [
-          "Platforma Sotuvchilarni ulanishda tekshiradi (ro'yxat hujjatlari, tovar kelib chiqishi). «100% original» belgisi Sotuvchi rasmiy kelib chiqishini hujjatlar bilan tasdiqlagan tovarlarga beriladi.",
-          "Agar bunday tovarning aslligi tasdiqlanmasa, Sotuvchi Platformadan butunlay o'chiriladi, u haqidagi ma'lumot vakolatli organlarga beriladi, Platforma esa Xaridorga Sotuvchidan pulni qaytarib olishda ko'maklashadi.",
+          "«100% original» belgisi tovar kelib chiqishini Platformaga hujjatlar bilan tasdiqlagan Sotuvchilarning tovarlariga beriladi. Belgini Platforma administratori yoqadi; Sotuvchi uni o'zi qo'ya olmaydi.",
+          "Agar Platforma administratori Sotuvchining tovar kelib chiqishi tasdig'ini o'chirsa, belgi uning barcha tovarlaridan olib tashlanadi.",
         ],
       },
       {

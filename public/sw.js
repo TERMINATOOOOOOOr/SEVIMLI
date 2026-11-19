@@ -3,7 +3,7 @@
    ВАЖНО: respondWith всегда получает настоящий Response — undefined ломает
    навигацию («This page couldn't load» в Chrome). */
 
-const VERSION = 'sevimli-v4'
+const VERSION = 'sevimli-v5'
 const IMG_CACHE = `${VERSION}-img`
 const STATIC_CACHE = `${VERSION}-static`
 const PAGE_CACHE = `${VERSION}-pages`
@@ -20,7 +20,7 @@ button{margin-top:16px;background:#c4507a;color:#fff;border:0;border-radius:999p
 
 /* Личные страницы (профиль, корзина, кабинет, вход) на общем устройстве
    не должны оставаться в Cache Storage после выхода из аккаунта. */
-const PRIVATE_PREFIXES = ['/profile', '/cart', '/seller', '/auth', '/courier', '/loyalty', '/davra']
+const PRIVATE_PREFIXES = ['/profile', '/cart', '/seller', '/auth', '/courier', '/loyalty', '/davra', '/admin', '/pay']
 function isPrivate(pathname) {
   return PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'))
 }

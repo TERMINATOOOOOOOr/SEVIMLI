@@ -10,6 +10,13 @@ export default async function SellerProductsPage() {
   const { shop } = await getSellerContext()
   if (!shop) return <NoShop />
 
-  const products = await getProductsByShop(shop.id)
-  return <ProductsManager shopId={shop.id} initialProducts={products} />
+  // Скрытые товары остаются в кабинете: их можно вернуть на витрину или поправить
+  const products = await getProductsByShop(shop.id, true)
+  return (
+    <ProductsManager
+      shopId={shop.id}
+      initialProducts={products}
+      originalVerified={Boolean(shop.is_original_verified)}
+    />
+  )
 }

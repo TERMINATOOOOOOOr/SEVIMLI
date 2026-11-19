@@ -33,7 +33,7 @@ export const demoShops: Shop[] = [
   { id: 's4', owner_id: null, name: 'Malika Beauty Salon', description: 'Салон красоты: маникюр, брови, макияж, массаж. Запись онлайн.', category_slug: 'salons', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: true, rating: 4.9, reviews_count: 340, created_at: '2026-03-10T10:00:00Z' },
   { id: 's5', owner_id: null, name: 'Bebi Kids', description: 'Всё для малышей: одежда, игрушки, коляски.', category_slug: 'kids', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: false, rating: 4.6, reviews_count: 65, created_at: '2026-06-01T10:00:00Z' },
   { id: 's6', owner_id: null, name: 'Uy Home Decor', description: 'Декор и текстиль для уютного дома.', category_slug: 'home', logo_url: null, city: 'Бухара', phone: null, instagram: null, is_verified: false, rating: 4.5, reviews_count: 42, created_at: '2026-06-10T10:00:00Z' },
-  { id: 's7', owner_id: null, name: 'Seoul Beauty', description: 'Официальный импорт корейской косметики: оригинал подтверждён документами поставщика. Доставка по Ташкенту за 1 день (демо-магазин).', category_slug: 'beauty', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: true, rating: 4.9, reviews_count: 512, created_at: '2026-04-01T10:00:00Z' },
+  { id: 's7', owner_id: null, name: 'Seoul Beauty', description: 'Импорт корейской косметики: происхождение товара подтверждено документами (демо-магазин).', category_slug: 'beauty', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: true, rating: 4.9, reviews_count: 512, created_at: '2026-04-01T10:00:00Z' },
   { id: 's8', owner_id: null, name: 'Salomat Pharm', description: 'Дермокосметика и товары для здоровья и гигиены. Без рецептурных лекарств (демо-магазин).', category_slug: 'pharmacy', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: true, rating: 4.8, reviews_count: 156, created_at: '2026-06-20T10:00:00Z' },
   { id: 's9', owner_id: null, name: 'Yashil Bozor', description: 'Фермерские продукты как с базара: мёд, орехи, сезонные фрукты. Доставка в день заказа.', category_slug: 'grocery', logo_url: null, city: 'Ташкент', phone: null, instagram: null, is_verified: false, rating: 4.7, reviews_count: 89, created_at: '2026-07-01T10:00:00Z' },
 ]
@@ -87,14 +87,14 @@ export const demoProducts: Product[] = [
   { ...base, id: 'p14', shop_id: 's4', name: 'Маникюр + покрытие гель-лак', description: 'Комплексный уход и покрытие.', price: 150000, old_price: null, category_slug: 'salons', stock: 100, created_at: '2026-06-16T10:00:00Z' },
 
   // --- Корейская косметика (Seoul Beauty, 100% оригинал) ---
-  { ...base, id: 'k1', shop_id: 's7', name: 'COSRX Advanced Snail 96 Mucin Power Essence', description: 'Эссенция с 96% муцином улитки. Увлажнение, восстановление, сияние. 100 мл. Официальный оригинал.', brand: 'COSRX', country: 'Корея', is_original: true, price: 139000, old_price: 189000, market_price: 210000, category_slug: 'beauty', stock: 60, created_at: '2026-07-14T10:00:00Z' },
-  { ...base, id: 'k2', shop_id: 's7', name: 'Beauty of Joseon Relief Sun SPF50+ PA++++', description: 'Лёгкий солнцезащитный крем с рисом и пробиотиками. Без белых следов. 50 мл.', brand: 'Beauty of Joseon', country: 'Корея', is_original: true, price: 99000, old_price: 135000, market_price: 155000, category_slug: 'beauty', stock: 80, created_at: '2026-07-13T10:00:00Z' },
-  { ...base, id: 'k3', shop_id: 's7', name: 'Anua Heartleaf 77% Soothing Toner', description: 'Успокаивающий тонер с экстрактом хауттюйнии 77%. Для чувствительной кожи. 250 мл.', brand: 'Anua', country: 'Корея', is_original: true, price: 149000, old_price: 199000, market_price: 230000, category_slug: 'beauty', stock: 45, created_at: '2026-07-12T10:00:00Z' },
-  { ...base, id: 'k4', shop_id: 's7', name: 'SOME BY MI AHA-BHA-PHA 30 Days Miracle Toner', description: 'Тонер-эксфолиант с кислотами и чайным деревом. Против воспалений. 150 мл.', brand: 'SOME BY MI', country: 'Корея', is_original: true, price: 129000, old_price: 175000, market_price: 195000, category_slug: 'beauty', stock: 38, created_at: '2026-07-11T10:00:00Z' },
-  { ...base, id: 'k5', shop_id: 's7', name: 'Torriden DIVE-IN Low Molecular Hyaluronic Serum', description: 'Сыворотка с 5D гиалуроновой кислотой. Глубокое увлажнение. 50 мл.', brand: 'Torriden', country: 'Корея', is_original: true, price: 145000, old_price: 195000, market_price: 220000, category_slug: 'beauty', stock: 52, created_at: '2026-07-10T10:00:00Z' },
-  { ...base, id: 'k6', shop_id: 's7', name: 'medicube Zero Pore Pad 2.0', description: 'Пэды для сужения пор и мягкой эксфолиации. 70 шт.', brand: 'medicube', country: 'Корея', is_original: true, price: 179000, old_price: 240000, market_price: 275000, category_slug: 'beauty', stock: 30, created_at: '2026-07-09T10:00:00Z' },
-  { ...base, id: 'k7', shop_id: 's7', name: 'numbuzin No.3 Skin Softening Serum', description: 'Сыворотка с ниацинамидом и экстрактами для ровного тона. 50 мл.', brand: 'numbuzin', country: 'Корея', is_original: true, price: 159000, old_price: 210000, market_price: 245000, category_slug: 'beauty', stock: 41, created_at: '2026-07-08T10:00:00Z' },
-  { ...base, id: 'k8', shop_id: 's7', name: 'ROUND LAB 1025 Dokdo Toner', description: 'Увлажняющий тонер с морской водой Токто и пантенолом. 200 мл.', brand: 'ROUND LAB', country: 'Корея', is_original: true, price: 135000, old_price: 180000, market_price: 205000, category_slug: 'beauty', stock: 47, created_at: '2026-07-07T10:00:00Z' },
+  { ...base, id: 'k1', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'COSRX Advanced Snail 96 Mucin Power Essence', description: 'Эссенция с 96% муцином улитки. Увлажнение, восстановление, сияние. 100 мл. Официальный оригинал.', brand: 'COSRX', country: 'Корея', is_original: true, price: 139000, old_price: 189000, market_price: 210000, category_slug: 'beauty', stock: 60, created_at: '2026-07-14T10:00:00Z' },
+  { ...base, id: 'k2', shop_id: 's7', expires_on: '2027-04-01', expires_precision: 'month' as const, pao_months: 12, name: 'Beauty of Joseon Relief Sun SPF50+ PA++++', description: 'Лёгкий солнцезащитный крем с рисом и пробиотиками. Без белых следов. 50 мл.', brand: 'Beauty of Joseon', country: 'Корея', is_original: true, price: 99000, old_price: 135000, market_price: 155000, category_slug: 'beauty', stock: 80, created_at: '2026-07-13T10:00:00Z' },
+  { ...base, id: 'k3', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'Anua Heartleaf 77% Soothing Toner', description: 'Успокаивающий тонер с экстрактом хауттюйнии 77%. Для чувствительной кожи. 250 мл.', brand: 'Anua', country: 'Корея', is_original: true, price: 149000, old_price: 199000, market_price: 230000, category_slug: 'beauty', stock: 45, created_at: '2026-07-12T10:00:00Z' },
+  { ...base, id: 'k4', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'SOME BY MI AHA-BHA-PHA 30 Days Miracle Toner', description: 'Тонер-эксфолиант с кислотами и чайным деревом. Против воспалений. 150 мл.', brand: 'SOME BY MI', country: 'Корея', is_original: true, price: 129000, old_price: 175000, market_price: 195000, category_slug: 'beauty', stock: 38, created_at: '2026-07-11T10:00:00Z' },
+  { ...base, id: 'k5', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'Torriden DIVE-IN Low Molecular Hyaluronic Serum', description: 'Сыворотка с 5D гиалуроновой кислотой. Глубокое увлажнение. 50 мл.', brand: 'Torriden', country: 'Корея', is_original: true, price: 145000, old_price: 195000, market_price: 220000, category_slug: 'beauty', stock: 52, created_at: '2026-07-10T10:00:00Z' },
+  { ...base, id: 'k6', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'medicube Zero Pore Pad 2.0', description: 'Пэды для сужения пор и мягкой эксфолиации. 70 шт.', brand: 'medicube', country: 'Корея', is_original: true, price: 179000, old_price: 240000, market_price: 275000, category_slug: 'beauty', stock: 30, created_at: '2026-07-09T10:00:00Z' },
+  { ...base, id: 'k7', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'numbuzin No.3 Skin Softening Serum', description: 'Сыворотка с ниацинамидом и экстрактами для ровного тона. 50 мл.', brand: 'numbuzin', country: 'Корея', is_original: true, price: 159000, old_price: 210000, market_price: 245000, category_slug: 'beauty', stock: 41, created_at: '2026-07-08T10:00:00Z' },
+  { ...base, id: 'k8', shop_id: 's7', expires_on: '2028-03-01', expires_precision: 'month' as const, pao_months: 12, name: 'ROUND LAB 1025 Dokdo Toner', description: 'Увлажняющий тонер с морской водой Токто и пантенолом. 200 мл.', brand: 'ROUND LAB', country: 'Корея', is_original: true, price: 135000, old_price: 180000, market_price: 205000, category_slug: 'beauty', stock: 47, created_at: '2026-07-07T10:00:00Z' },
 
   // --- Одежда и обувь (Lola Boutique) ---
   { ...base, id: 'p15', shop_id: 's1', name: 'Блузка шёлковая «Ivory»', description: 'Струящаяся блузка из искусственного шёлка, свободный крой. Размеры S–XL.', price: 195000, old_price: 240000, category_slug: 'clothes', stock: 16, created_at: '2026-07-26T10:00:00Z' },
@@ -147,7 +147,7 @@ const demoReviewsRaw: Review[] = [
   { id: 'r1', product_id: 'p1', user_id: null, rating: 5, text: 'Платье шикарное, ткань приятная, села идеально!', created_at: '2026-06-27T12:00:00Z', author: { id: 'u1', name: 'Дилноза', avatar_url: null, city: 'Ташкент', created_at: '2026-06-27T12:00:00Z' } },
   { id: 'r2', product_id: 'p1', user_id: null, rating: 4, text: 'Красивое, но доставка немного задержалась.', created_at: '2026-06-26T12:00:00Z', author: { id: 'u2', name: 'Малика', avatar_url: null, city: 'Ташкент', created_at: '2026-06-26T12:00:00Z' } },
   { id: 'r3', product_id: 'p4', user_id: null, rating: 5, text: 'Кожа стала заметно ровнее за 2 недели. Рекомендую!', created_at: '2026-06-25T12:00:00Z', author: { id: 'u3', name: 'Севара', avatar_url: null, city: 'Самарканд', created_at: '2026-06-25T12:00:00Z' } },
-  { id: 'r4', product_id: 'k1', user_id: null, rating: 5, text: 'Оригинал 100%, коробка с защитной наклейкой и QR. Кожа увлажнённая с первого применения.', created_at: '2026-07-15T12:00:00Z', author: { id: 'u4', name: 'Нигора', avatar_url: null, city: 'Ташкент', created_at: '2026-07-15T12:00:00Z' } },
+  { id: 'r4', product_id: 'k1', user_id: null, rating: 5, text: 'Оригинал, срок годности на коробке совпал с карточкой. Кожа увлажнённая с первого применения.', created_at: '2026-07-15T12:00:00Z', author: { id: 'u4', name: 'Нигора', avatar_url: null, city: 'Ташкент', created_at: '2026-07-15T12:00:00Z' } },
   { id: 'r5', product_id: 'k2', user_id: null, rating: 5, text: 'Лучший санскрин! И тут реально дешевле, чем в оффлайн-магазинах. Доставили за день.', created_at: '2026-07-14T12:00:00Z', author: { id: 'u5', name: 'Камила', avatar_url: null, city: 'Ташкент', created_at: '2026-07-14T12:00:00Z' } },
   { id: 'r6', product_id: 'p23', user_id: null, rating: 5, text: 'Аромат восхитительный, держится с утра до вечера. Муж оценил 😄', created_at: '2026-08-01T15:00:00Z', author: { id: 'u6', name: 'Зарина', avatar_url: null, city: 'Ташкент', created_at: '2026-08-01T15:00:00Z' } },
   { id: 'r7', product_id: 'p18', user_id: null, rating: 5, text: 'Удобные, лёгкие, размер в размер. Ношу вторую неделю — белые до сих пор 😅', created_at: '2026-07-31T18:00:00Z', author: { id: 'u5', name: 'Камила', avatar_url: null, city: 'Ташкент', created_at: '2026-07-31T18:00:00Z' } },
@@ -168,12 +168,12 @@ export const demoReviews: Review[] = demoReviewsRaw.map((r) => ({
 export const demoPosts: CommunityPost[] = [
   {
     id: 'cp1', author_name: 'Нигора', author_city: 'Ташкент', author_avatar: DEMO_AVATARS['Нигора'], kind: 'review',
-    text: 'Девочки, наконец нашла где брать оригинал COSRX по нормальной цене 🙌 Эссенция с муцином — кожа реально стала более увлажнённой за неделю. Брала на SEVIMLI, пришло с защитной наклейкой.',
+    text: 'Девочки, наконец нашла где брать оригинал COSRX по нормальной цене 🙌 Эссенция с муцином — кожа реально стала более увлажнённой за неделю. Брала на SEVIMLI: срок годности на коробке совпал с тем, что был в карточке.',
     images: ['/img/community/post1.jpg'], tags: ['уход', 'корея', 'отзыв'], product_id: 'k1', likes: 42,
     created_at: '2026-07-15T09:30:00Z',
     comments: [
       { id: 'cc1', post_id: 'cp1', author_name: 'Малика', text: 'А как отличить оригинал от подделки?', created_at: '2026-07-15T10:00:00Z' },
-      { id: 'cc2', post_id: 'cp1', author_name: 'Нигора', text: 'На официальном есть QR-код и наклейка, тут всё было 👍', created_at: '2026-07-15T10:20:00Z' },
+      { id: 'cc2', post_id: 'cp1', author_name: 'Нигора', text: 'Я сверяю код партии и срок годности на коробке и на флаконе — они должны совпадать. Тут всё совпало 👍', created_at: '2026-07-15T10:20:00Z' },
     ],
   },
   {
@@ -265,7 +265,7 @@ export const demoPosts: CommunityPost[] = [
   },
   {
     id: 'cp10', author_name: 'Севара', author_city: 'Самарканд', author_avatar: DEMO_AVATARS['Севара'], kind: 'tip',
-    text: 'Как отличить оригинал K-beauty: 1) защитная наклейка на коробке 2) QR-код ведёт на сайт бренда 3) батч-код совпадает на коробке и флаконе 4) цена не «в 3 раза дешевле рынка». На SEVIMLI всё это проверяют до продажи — но проверять самой тоже полезно 😉',
+    text: 'Что я проверяю, когда получаю K-beauty: 1) код партии на коробке и на флаконе совпадает 2) срок годности не на исходе 3) плёнка и упаковка целые 4) цена не «в 3 раза дешевле рынка». На SEVIMLI срок годности видно ещё в карточке товара — удобно 😉',
     images: [], tags: ['совет', 'корея', 'оригинал'], product_id: null, likes: 54,
     created_at: '2026-07-20T09:00:00Z',
     comments: [
@@ -299,7 +299,7 @@ export const demoQuestions: ProductQuestion[] = [
     id: 'q1', product_id: 'k1', author_name: 'Малика',
     text: 'Это точно оригинал? Не подделка из Китая?', created_at: '2026-07-14T10:00:00Z',
     answers: [
-      { id: 'qa1', question_id: 'q1', author_name: 'Seoul Beauty', is_seller: true, text: 'Да, 100% оригинал — прямой официальный импорт. На каждой упаковке защитная наклейка и QR-код производителя. Даём гарантию подлинности.', created_at: '2026-07-14T11:00:00Z' },
+      { id: 'qa1', question_id: 'q1', author_name: 'Seoul Beauty', is_seller: true, text: 'Да, это оригинал: документы на импорт мы показали SEVIMLI. Срок годности указан в карточке товара — он совпадает с тем, что на упаковке.', created_at: '2026-07-14T11:00:00Z' },
     ],
   },
   {

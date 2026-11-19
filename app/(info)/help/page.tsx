@@ -24,7 +24,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Как убедиться, что косметика — оригинал?',
         p: [
-          'Магазины с маркировкой «100% оригинал» подтвердили платформе официальное происхождение товара документами. Плюс проверяйте сами: защитная наклейка, QR-код производителя, совпадение батч-кодов. Если подлинность не подтвердится — магазин отключается от площадки навсегда.',
+          'Метку «100% оригинал» получают товары магазинов, которые подтвердили SEVIMLI происхождение товара документами; включает её администратор площадки. Проверяйте и сами: в карточке товара указан срок годности — при получении сверьте его и код партии на коробке и флаконе.',
         ],
       },
       {
@@ -82,7 +82,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Kosmetika original ekaniga qanday ishonch hosil qilaman?',
         p: [
-          "«100% original» belgili do'konlar mahsulotning rasmiy kelib chiqishini platformaga hujjatlar bilan tasdiqlagan. O'zingiz ham tekshiring: himoya stikeri, ishlab chiqaruvchi QR-kodi, batch-kodlar mosligi. Asllik tasdiqlanmasa — do'kon platformadan butunlay o'chiriladi.",
+          "«100% original» belgisini kelib chiqishini SEVIMLIga hujjatlar bilan tasdiqlagan do'konlarning mahsulotlari oladi; belgini platforma administratori yoqadi. O'zingiz ham tekshiring: mahsulot kartochkasida yaroqlilik muddati ko'rsatilgan — qabul qilishda uni va quti hamda flakondagi partiya kodini solishtiring.",
         ],
       },
       {

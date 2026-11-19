@@ -19,6 +19,7 @@ import Thumb from '@/components/ui/Thumb'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 import { shopAcceptsOnline } from '@/lib/payments'
+import { mapTrustError } from '@/lib/trust-errors'
 
 type DeliveryMethod = 'seller' | 'pickup'
 
@@ -189,7 +190,13 @@ export default function CartPage() {
       clearCart()
       setOrderNumber(firstId ? firstId.slice(0, 8) : '—')
     } catch (err) {
-      setError(err instanceof Error ? err.message : t.cart.orderFail)
+      // Ответ базы — объект { message, code }: показываем понятную причину, а не общее «не удалось»
+      const mapped = mapTrustError(err)
+      if (mapped.code === 'product_expired') setError(`${t.cart.errExpired} ${mapped.detail ?? ''}`.trim())
+      else if (mapped.code === 'stock') setError(`${t.cart.errStock} ${mapped.detail ?? ''}`.trim())
+      else if (mapped.code === 'unavailable') setError(t.cart.errUnavailable)
+      else if (mapped.code === 'too_many_pending') setError(t.cart.errTooMany)
+      else setError(err instanceof Error ? err.message : t.cart.orderFail)
     } finally {
       setSubmitting(false)
     }

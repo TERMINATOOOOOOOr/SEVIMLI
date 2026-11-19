@@ -132,7 +132,7 @@ export async function getNewProducts(limit = 8): Promise<Product[]> {
 /** Корейская косметика с подтверждённым оригиналом — для главной и страницы /korean. */
 export async function getOriginalProducts(limit = 8): Promise<Product[]> {
   if (!isSupabaseConfigured()) {
-    return demoProducts.filter((p) => p.is_original).slice(0, limit)
+    return demoProducts.filter((p) => p.is_original && p.country === 'Корея').slice(0, limit)
   }
   try {
     const supabase = await createClient()
@@ -140,6 +140,7 @@ export async function getOriginalProducts(limit = 8): Promise<Product[]> {
       .from('products')
       .select(PRODUCT_WITH_SHOP)
       .eq('is_original', true)
+      .eq('country', 'Корея')
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -517,36 +518,6 @@ export async function getOrderForPayment(id: string): Promise<Order | null> {
     return data as Order
   } catch {
     return null
-  }
-}
-
-// ---------- Коды подлинности (кабинет продавца) ----------
-
-export interface ShopCode {
-  code: string
-  product_id: string | null
-  batch: string | null
-  expires_at: string | null
-  checks_count: number
-  first_checked_at: string | null
-  created_at: string
-}
-
-/** Коды, выпущенные магазином (RLS: владелец магазина с подтверждённым импортом или админ). */
-export async function getShopCodes(shopId: string): Promise<ShopCode[]> {
-  if (!isSupabaseConfigured()) return []
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('authenticity_codes')
-      .select('code, product_id, batch, expires_at, checks_count, first_checked_at, created_at')
-      .eq('shop_id', shopId)
-      .order('created_at', { ascending: false })
-      .limit(1000)
-    if (error) return []
-    return (data as ShopCode[] | null) ?? []
-  } catch {
-    return []
   }
 }
 

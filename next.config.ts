@@ -29,7 +29,7 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
     key: 'Permissions-Policy',
-    // камера — себе (для будущего QR-сканера подлинности), остальное закрыто
+    // камера — себе (для фото товара перед отправкой), остальное закрыто
     value: 'camera=(self), microphone=(), geolocation=(), payment=()',
   },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
@@ -46,7 +46,12 @@ const nextConfig: NextConfig = {
   // Убирает заголовок x-powered-by: Next.js
   poweredByHeader: false,
   async redirects() {
-    return [{ source: '/docs/:file*', destination: `${DOCS_BUCKET_URL}/:file*`, permanent: false }]
+    return [
+      { source: '/docs/:file*', destination: `${DOCS_BUCKET_URL}/:file*`, permanent: false },
+      // Коды подлинности сняты: старые ссылки и QR ведут на «Как убедиться в товаре»
+      { source: '/verify', destination: '/trust', permanent: false },
+      { source: '/seller/codes', destination: '/seller/products', permanent: false },
+    ]
   },
   async headers() {
     return [

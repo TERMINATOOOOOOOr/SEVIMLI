@@ -107,10 +107,21 @@ export interface Product {
   brand?: string | null
   /** Страна происхождения (напр. «Корея»). Опционально. */
   country?: string | null
-  /** Гарантия оригинала/официальный импорт. Опционально. */
+  /** Метка «оригинал»: ставится только товарам магазина с подтверждённым импортом. */
   is_original?: boolean
   /** Цена официальных ритейлеров (для показа «дешевле оригинала»). */
   market_price?: number | null
+  /** Срок годности как на упаковке; при точности «month» хранится первое число месяца. */
+  expires_on?: string | null
+  expires_precision?: 'month' | 'day' | null
+  /** Месяц изготовления (первое число), если на упаковке нет срока годности. */
+  made_on?: string | null
+  /** Срок после вскрытия, мес. */
+  pao_months?: number | null
+  /** Магазин указал, что срока годности нет. */
+  no_expiry?: boolean | null
+  /** Когда магазин указал срок — ставит сервер. */
+  expiry_set_at?: string | null
   /** Подгружается через join при выборке. */
   shop?: Shop | null
 }
@@ -156,6 +167,12 @@ export interface OrderItem {
   product_id: string | null
   quantity: number
   price_at_order: number
+  /** Снимок товара на момент заказа (ставит сервер). */
+  product_name?: string | null
+  expires_on?: string | null
+  expires_precision?: 'month' | 'day' | null
+  made_on?: string | null
+  is_original?: boolean | null
   product?: Product | null
 }
 
