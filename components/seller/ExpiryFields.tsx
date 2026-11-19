@@ -37,8 +37,9 @@ export default function ExpiryFields({ value, onChange, required }: Props) {
 
   // «Только дата изготовления» — отдельный режим: дату в нём можно ещё не выбрать
   const [mfgMode, setMfgMode] = useState(value.made_on !== null && value.expires_on === null)
-  const dateIso = mfgMode ? value.made_on : value.expires_on
-  const { y, m, d } = parts(dateIso)
+  // Выбор в списках храним отдельно: пока выбран только месяц или только год, даты ещё нет
+  const [sel, setSel] = useState(() => parts(mfgMode ? value.made_on : value.expires_on))
+  const { y, m, d } = sel
   const thisYear = Number(todayTashkent().slice(0, 4))
   const years = mfgMode
     ? Array.from({ length: 6 }, (_, i) => thisYear - i)
@@ -46,11 +47,13 @@ export default function ExpiryFields({ value, onChange, required }: Props) {
   const precision = mfgMode ? 'month' : value.expires_precision
 
   function setDate(ny: string, nm: string, nd: string) {
-    if (!ny || !nm) {
+    setSel({ y: ny, m: nm, d: nd })
+    const complete = Boolean(ny && nm && (precision !== 'day' || nd))
+    if (!complete) {
       onChange(mfgMode ? { ...value, made_on: null } : { ...value, expires_on: null })
       return
     }
-    const day = precision === 'day' && nd ? nd : '01'
+    const day = precision === 'day' ? nd : '01'
     const last = new Date(Date.UTC(Number(ny), Number(nm), 0)).getUTCDate()
     const iso = `${ny}-${nm}-${pad(Math.min(Number(day), last))}`
     onChange(mfgMode ? { ...value, made_on: iso, no_expiry: false } : { ...value, expires_on: iso, no_expiry: false })
@@ -69,13 +72,14 @@ export default function ExpiryFields({ value, onChange, required }: Props) {
         <input
           type="checkbox"
           checked={value.no_expiry}
-          onChange={(e) =>
+          onChange={(e) => {
+            if (e.target.checked) setSel({ y: '', m: '', d: '' })
             onChange(
               e.target.checked
                 ? { ...value, no_expiry: true, expires_on: null, made_on: null, pao_months: null }
                 : { ...value, no_expiry: false },
             )
-          }
+          }}
         />
         {s.noExpiry}
       </label>
@@ -117,6 +121,7 @@ export default function ExpiryFields({ value, onChange, required }: Props) {
                   const next = precision === 'day' ? 'month' : 'day'
                   // Переход на «месяц» — храним первое число, как требует база
                   const exp = value.expires_on && next === 'month' ? `${value.expires_on.slice(0, 8)}01` : value.expires_on
+                  setSel({ ...sel, d: next === 'day' ? (exp ? exp.slice(8, 10) : '') : '' })
                   onChange({ ...value, expires_precision: next, expires_on: exp })
                 }}
               >
@@ -132,6 +137,7 @@ export default function ExpiryFields({ value, onChange, required }: Props) {
                     ? { ...value, made_on: null, pao_months: null }
                     : { ...value, expires_on: null, expires_precision: 'month' },
                 )
+                setSel({ y: '', m: '', d: '' })
                 setMfgMode(!mfgMode)
               }}
             >
