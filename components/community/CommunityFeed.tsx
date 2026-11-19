@@ -12,7 +12,7 @@ import { useLang } from '@/components/LangProvider'
 import { tagLabel } from '@/lib/community-i18n'
 import { cn } from '@/lib/utils'
 import PostCard from '@/components/community/PostCard'
-import PostComposer from '@/components/community/PostComposer'
+import ComposerLauncher from '@/components/community/ComposerLauncher'
 
 type Filter = 'all' | PostKind
 type Sort = 'new' | 'popular'
@@ -79,8 +79,8 @@ export default function CommunityFeed({ products, initialPosts, initialLikedIds,
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_260px]">
-      <div className="space-y-5">
-        <PostComposer
+      <div className="min-w-0 space-y-5">
+        <ComposerLauncher
           products={products}
           viewer={viewer}
           onCreated={live.prepend}

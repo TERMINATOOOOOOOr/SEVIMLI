@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { Sparkles, ImagePlus, X } from 'lucide-react'
 import type { CommunityPost, PostKind, Product, Viewer } from '@/lib/types'
 import { useCommunity } from '@/store/community'
-import { COMMUNITY_LIVE, createPost, uploadPostImage, removePostImages, mapError } from '@/lib/community-live'
+import { COMMUNITY_LIVE, MAX_IMAGE_BYTES, createPost, uploadPostImage, removePostImages, mapError } from '@/lib/community-live'
 import { useLang } from '@/components/LangProvider'
 import { productName } from '@/lib/product-i18n'
 import { cn } from '@/lib/utils'
@@ -13,9 +13,14 @@ import LoginCta from '@/components/community/LoginCta'
 const MAX_IMAGES = 2
 const MAX_TEXT = 2000
 const LIVE_TYPES = /^image\/(jpeg|png|webp)$/
+/** Исходное фото с телефона — до 15 МБ; перед загрузкой оно сжимается до JPEG. */
+const MAX_ORIGINAL_BYTES = 15 * 1024 * 1024
 
-/** Файл → сжатый dataURL (длинная сторона 900px): превью, а в демо — и хранилище. */
-function fileToDataUrl(file: File, maxSide = 900): Promise<string> {
+/** Сколько байт в data:-URL (base64 ≈ 4/3 от исходных байт). */
+const dataUrlBytes = (d: string) => Math.ceil(((d.length - d.indexOf(',') - 1) * 3) / 4)
+
+/** Файл → сжатый dataURL: превью, а в демо — и хранилище. */
+function fileToDataUrl(file: File, maxSide = 900, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
@@ -26,7 +31,7 @@ function fileToDataUrl(file: File, maxSide = 900): Promise<string> {
       canvas.height = Math.round(img.height * scale)
       canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height)
       URL.revokeObjectURL(url)
-      resolve(canvas.toDataURL('image/jpeg', 0.82))
+      resolve(canvas.toDataURL('image/jpeg', quality))
     }
     img.onerror = (e) => {
       URL.revokeObjectURL(url)
@@ -42,9 +47,13 @@ interface Props {
   viewer?: Viewer | null
   onCreated?: (post: CommunityPost) => void
   requireAuth?: () => boolean
+  /** Пост опубликован (и в демо, и в боевом режиме) — например, закрыть окно. */
+  onDone?: () => void
+  /** Без своей рамки и заголовка — когда форма открыта в окне. */
+  bare?: boolean
 }
 
-export default function PostComposer({ products, viewer = null, onCreated, requireAuth }: Props) {
+export default function PostComposer({ products, viewer = null, onCreated, requireAuth, onDone, bare = false }: Props) {
   const { lang, t } = useLang()
   const addPost = useCommunity((s) => s.addPost)
   const authorName = useCommunity((s) => s.authorName)
@@ -82,10 +91,16 @@ export default function PostComposer({ products, viewer = null, onCreated, requi
     e.target.value = ''
     const isOk = (f: File) => (COMMUNITY_LIVE ? LIVE_TYPES.test(f.type) : f.type.startsWith('image/'))
     if (COMMUNITY_LIVE && picked.some((f) => !isOk(f))) setError(t.composer.photoBadType)
-    const files = picked.filter(isOk).slice(0, MAX_IMAGES - images.length)
+    if (picked.some((f) => f.size > MAX_ORIGINAL_BYTES)) setError(t.composer.photoTooBig)
+    const files = picked
+      .filter((f) => isOk(f) && f.size <= MAX_ORIGINAL_BYTES)
+      .slice(0, MAX_IMAGES - images.length)
     for (const f of files) {
       try {
-        const dataUrl = await fileToDataUrl(f)
+        // В боевом режиме — крупнее и чётче; если сжатый файл всё равно больше лимита бакета, жмём сильнее.
+        // В демо фото хранится в localStorage, поэтому там остаётся маленький размер.
+        let dataUrl = COMMUNITY_LIVE ? await fileToDataUrl(f, 1600, 0.85) : await fileToDataUrl(f)
+        if (COMMUNITY_LIVE && dataUrlBytes(dataUrl) > MAX_IMAGE_BYTES) dataUrl = await fileToDataUrl(f, 1280, 0.72)
         setImages((prev) => (prev.length < MAX_IMAGES ? [...prev, dataUrl] : prev))
       } catch {
         /* битый файл — пропускаем */
@@ -108,6 +123,7 @@ export default function PostComposer({ products, viewer = null, onCreated, requi
     setImages([])
     setSent(true)
     setTimeout(() => setSent(false), 2500)
+    onDone?.()
   }
 
   async function submit(e: React.FormEvent) {
@@ -151,14 +167,16 @@ export default function PostComposer({ products, viewer = null, onCreated, requi
   const busy = stage !== 'idle'
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-neutral-200 bg-white p-5">
-      <div className="flex items-center gap-2">
-        <Sparkles size={18} className="text-primary" />
-        <h2 className="font-semibold text-neutral-900">{t.composer.title}</h2>
-      </div>
+    <form onSubmit={submit} className={bare ? '' : 'rounded-2xl border border-neutral-200 bg-white p-5'}>
+      {!bare && (
+        <div className="flex items-center gap-2">
+          <Sparkles size={18} className="text-primary" />
+          <h2 className="font-semibold text-neutral-900">{t.composer.title}</h2>
+        </div>
+      )}
 
       {/* Тип поста */}
-      <div className="mt-4 flex gap-1.5">
+      <div className={cn('flex gap-1.5', !bare && 'mt-4')}>
         {KINDS.map((k) => (
           <button
             key={k.id}

@@ -122,6 +122,7 @@ export async function addAnswer(questionId: string, text: string, userId: string
   return data as ProductAnswer // is_seller и имя магазина проставил stamp_answer_author (004)
 }
 
+/** Лимит бакета community на уже сжатый JPEG (исходник до 15 МБ сжимает композер). */
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
 /** data:-URL (canvas JPEG из композера) → Blob без fetch(): CSP connect-src не пускает data:. */
