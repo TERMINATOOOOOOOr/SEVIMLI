@@ -264,8 +264,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'loyalty',
     words: /балл|кешб[эе]к|кешбек|лояльн|бонус|уровн|cashback|sodiqlik/i,
     answer: {
-      ru: '💎 Лояльность: копите баллы с каждой завершённой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. 1 балл за каждые 1 000 сум, а уровень добавляет бонус к баллам — от +1% до +5%. Списание баллов пока не подключено.',
-      uz: '💎 Sodiqlik: har yakunlangan xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Har 1 000 soʻm uchun 1 ball, daraja esa ballarga +1% dan +5% gacha bonus qoʻshadi. Ballarni sarflash hozircha ulanmagan.',
+      ru: '💎 Лояльность: копите баллы с каждой завершённой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. 1 балл за каждые 1 000 сум, а уровень добавляет бонус к баллам — от +1% до +5%. Скоро баллами можно будет оплачивать покупки.',
+      uz: '💎 Sodiqlik: har yakunlangan xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Har 1 000 soʻm uchun 1 ball, daraja esa ballarga +1% dan +5% gacha bonus qoʻshadi. Tez orada ballar bilan xaridlar uchun toʻlash mumkin boʻladi.',
     },
   },
   {

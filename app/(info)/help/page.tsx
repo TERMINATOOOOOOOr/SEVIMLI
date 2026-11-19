@@ -48,7 +48,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Как работает карта лояльности?',
         p: [
-          'Баллы начисляются за каждый завершённый заказ у любого магазина площадки: 1 балл за каждые 1 000 сум, а уровень добавляет к ним бонус — от +1% (Bronze) до +5% (Platinum). Пока баллы только копятся: списание баллов ещё не подключено.',
+          'Баллы начисляются за каждый завершённый заказ у любого магазина площадки: 1 балл за каждые 1 000 сум, а уровень добавляет к ним бонус — от +1% (Bronze) до +5% (Platinum). Пока баллы только копятся — скоро ими можно будет оплачивать покупки.',
         ],
       },
       {
@@ -106,7 +106,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Sodiqlik kartasi qanday ishlaydi?',
         p: [
-          "Ballar platformadagi istalgan do'kondagi har bir yakunlangan buyurtma uchun hisoblanadi: har 1 000 so'm uchun 1 ball, daraja esa bonus qo'shadi — +1% (Bronze) dan +5% (Platinum) gacha. Hozircha ballar faqat to'planadi: ballarni sarflash hali ulanmagan.",
+          "Ballar platformadagi istalgan do'kondagi har bir yakunlangan buyurtma uchun hisoblanadi: har 1 000 so'm uchun 1 ball, daraja esa bonus qo'shadi — +1% (Bronze) dan +5% (Platinum) gacha. Hozircha ballar faqat to'planadi — tez orada ular bilan xaridlar uchun to'lash mumkin bo'ladi.",
         ],
       },
       {

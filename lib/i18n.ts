@@ -219,7 +219,7 @@ const ru = {
     badge: 'Программа лояльности',
     title: 'Ваша карта SEVIMLI',
     subtitle:
-      'Копите баллы с каждой завершённой покупки и открывайте новые уровни. Пока баллы только копятся — списание баллов ещё не подключено.',
+      'Копите баллы с каждой завершённой покупки и открывайте новые уровни. Пока баллы только копятся — скоро ими можно будет оплачивать покупки.',
     tiersTitle: 'Уровни и привилегии',
     from: 'от',
     pointsWord: 'баллов',
@@ -900,7 +900,7 @@ const uz: Dict = {
     badge: 'Sodiqlik dasturi',
     title: 'Sizning SEVIMLI kartangiz',
     subtitle:
-      "Har bir yakunlangan xariddan ball to'plang va yangi darajalarni oching. Hozircha ballar faqat to'planadi — ballarni sarflash hali ulanmagan.",
+      "Har bir yakunlangan xariddan ball to'plang va yangi darajalarni oching. Hozircha ballar faqat to'planadi — tez orada ular bilan xaridlar uchun to'lash mumkin bo'ladi.",
     tiersTitle: 'Darajalar va imtiyozlar',
     from: '',
     pointsWord: 'balldan',
