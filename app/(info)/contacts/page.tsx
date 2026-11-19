@@ -14,14 +14,14 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         p: [
           '- Telegram: @sevimli_uz',
           '- E-mail: hello@sevimli.uz',
-          'Первый ответ в Telegram — в течение часа в рабочее время; претензии по заказу разбираем до 3 рабочих дней.',
+          'Отвечаем в Telegram и по почте в рабочее время; претензию по заказу передаём магазину и помогаем договориться.',
         ],
       },
       {
         h: 'Продавцам и партнёрам',
         p: [
           '- E-mail: partners@sevimli.uz',
-          'Хотите продавать на SEVIMLI? Нажмите «Стать продавцом» на странице входа — проверка магазина занимает до 2 рабочих дней. Размещение бесплатно.',
+          'Хотите продавать на SEVIMLI? Нажмите «Стать продавцом» на странице входа и заполните карточку магазина. Значок «проверенный магазин» ставим после проверки документов. Сейчас размещение бесплатное.',
         ],
       },
       {
@@ -39,14 +39,14 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         p: [
           '- Telegram: @sevimli_uz',
           '- E-mail: hello@sevimli.uz',
-          "Telegramda birinchi javob — ish vaqtida bir soat ichida; buyurtma bo'yicha da'volarni 3 ish kunigacha ko'rib chiqamiz.",
+          "Telegram va pochta orqali ish vaqtida javob beramiz; buyurtma bo'yicha da'voni do'konga yetkazamiz va kelishishga yordam beramiz.",
         ],
       },
       {
         h: 'Sotuvchilar va hamkorlarga',
         p: [
           '- E-mail: partners@sevimli.uz',
-          "SEVIMLIda sotmoqchimisiz? Kirish sahifasida «Sotuvchi bo'lish» tugmasini bosing — do'kon tekshiruvi 2 ish kunigacha davom etadi. Joylashtirish bepul.",
+          "SEVIMLIda sotmoqchimisiz? Kirish sahifasida «Sotuvchi bo'lish» tugmasini bosing va do'kon kartochkasini to'ldiring. «Tekshirilgan do'kon» belgisini hujjatlar tekshirilgach qo'yamiz. Hozircha joylashtirish bepul.",
         ],
       },
       {

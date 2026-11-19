@@ -5,7 +5,7 @@ import LoyaltyView from '@/components/loyalty/LoyaltyView'
 export const metadata: Metadata = {
   title: 'Карта лояльности',
   description:
-    'Программа лояльности SEVIMLI: баллы за завершённые покупки, уровни Bronze–Platinum и кешбэк баллами до 5%.',
+    'Программа лояльности SEVIMLI: баллы за завершённые покупки и уровни Bronze–Platinum с бонусом к баллам.',
 }
 
 export const dynamic = 'force-dynamic'

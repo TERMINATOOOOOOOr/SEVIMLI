@@ -12,13 +12,13 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'SEVIMLI — это магазин?',
         p: [
-          'Нет. SEVIMLI — площадка, как Uzum: магазины и салоны открывают здесь свои витрины и продают сами. Мы не продаём и не доставляем товары — мы даём удобный сервис заказа, живое сообщество с честными отзывами и проверяем продавцов при подключении.',
+          'Нет. SEVIMLI — площадка, как Uzum: магазины и салоны открывают здесь свои витрины и продают сами. Мы не продаём и не доставляем товары — мы даём удобный сервис заказа и живое сообщество, а проверенные магазины отмечаем значком.',
         ],
       },
       {
         h: 'У кого я покупаю и кто отвечает за заказ?',
         p: [
-          'У конкретного магазина — его название видно на карточке товара и в заказе. Магазин отвечает за качество, доставку и возврат. Если возник спор, платформа выступает медиатором: передаёт претензию магазину в течение 24 часов и помогает договориться.',
+          'У конкретного магазина — его название видно на карточке товара и в заказе. Магазин отвечает за качество, доставку и возврат. Если возник спор, платформа выступает медиатором: передаёт претензию магазину и помогает договориться.',
         ],
       },
       {
@@ -28,9 +28,9 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         ],
       },
       {
-        h: 'Почему цены ниже, чем в офлайн-магазинах?',
+        h: 'Почему у разных магазинов разные цены?',
         p: [
-          'Продавцы на площадке конкурируют друг с другом и не содержат дорогие офлайн-точки — поэтому цены обычно ниже. Слишком низкая цена без документов — повод насторожиться: такие магазины мы не подключаем.',
+          'Цену устанавливает каждый магазин сам — на площадке их удобно сравнить. Слишком низкая цена — повод насторожиться: спросите продавца о происхождении товара прямо на странице товара и обратите внимание на метку «100% оригинал».',
         ],
       },
       {
@@ -48,13 +48,13 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Как работает карта лояльности?',
         p: [
-          'Баллы начисляются за каждый завершённый заказ у любого магазина площадки: от 1% (Bronze) до 5% (Platinum). 1 балл = 1 сум; баллами можно оплатить до 20% следующего заказа, баллы действуют 6 месяцев.',
+          'Баллы начисляются за каждый завершённый заказ у любого магазина площадки: 1 балл за каждые 1 000 сум, а уровень добавляет к ним бонус — от +1% (Bronze) до +5% (Platinum). Пока баллы только копятся: списание баллов ещё не подключено.',
         ],
       },
       {
         h: 'Как стать продавцом?',
         p: [
-          'Нажмите «Стать продавцом» в профиле, заполните карточку магазина и загрузите товары. Проверка — до 2 рабочих дней: смотрим документы и происхождение товара. Размещение бесплатно; платные тарифы с продвижением и аналитикой — по желанию продавца, без процента с продаж.',
+          'Нажмите «Стать продавцом» в профиле, заполните карточку магазина и загрузите товары. Значок «проверенный магазин» и метку «100% оригинал» ставим после проверки документов. Сейчас размещение бесплатное.',
         ],
       },
       {
@@ -70,7 +70,7 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: "SEVIMLI — do'konmi?",
         p: [
-          "Yo'q. SEVIMLI — Uzum kabi maydon: do'konlar va salonlar bu yerda o'z vitrinalarini ochib, o'zlari sotadi. Biz mahsulot sotmaymiz va yetkazmaymiz — qulay buyurtma xizmati, samimiy sharhli jonli hamjamiyat beramiz va ulanishda sotuvchilarni tekshiramiz.",
+          "Yo'q. SEVIMLI — Uzum kabi maydon: do'konlar va salonlar bu yerda o'z vitrinalarini ochib, o'zlari sotadi. Biz mahsulot sotmaymiz va yetkazmaymiz — qulay buyurtma xizmati va jonli hamjamiyat beramiz, tekshirilgan do'konlarni esa belgi bilan ajratamiz.",
         ],
       },
       {
@@ -86,9 +86,9 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
         ],
       },
       {
-        h: "Nega narxlar oflayn do'konlardagidan past?",
+        h: "Nega turli do'konlarda narxlar har xil?",
         p: [
-          "Platformadagi sotuvchilar bir-biri bilan raqobatlashadi va qimmat oflayn nuqtalarni saqlamaydi — shuning uchun narxlar odatda pastroq. Hujjatsiz o'ta past narx — hushyor bo'lishga sabab: bunday do'konlarni ulamaymiz.",
+          "Narxni har bir do'kon o'zi belgilaydi — platformada ularni solishtirish qulay. O'ta past narx — hushyor bo'lishga sabab: mahsulot sahifasida sotuvchidan kelib chiqishi haqida so'rang va «100% original» belgisiga e'tibor bering.",
         ],
       },
       {
@@ -106,13 +106,13 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Sodiqlik kartasi qanday ishlaydi?',
         p: [
-          "Ballar platformadagi istalgan do'kondagi har bir yakunlangan buyurtma uchun hisoblanadi: 1% (Bronze) dan 5% (Platinum) gacha. 1 ball = 1 so'm; keyingi buyurtmaning 20% gachasini ballar bilan to'lash mumkin, ballar 6 oy amal qiladi.",
+          "Ballar platformadagi istalgan do'kondagi har bir yakunlangan buyurtma uchun hisoblanadi: har 1 000 so'm uchun 1 ball, daraja esa bonus qo'shadi — +1% (Bronze) dan +5% (Platinum) gacha. Hozircha ballar faqat to'planadi: ballarni sarflash hali ulanmagan.",
         ],
       },
       {
         h: "Qanday sotuvchi bo'laman?",
         p: [
-          "Profilda «Sotuvchi bo'lish»ni bosing, do'kon kartochkasini to'ldiring va mahsulotlarni yuklang. Tekshiruv — 2 ish kunigacha: hujjatlar va mahsulot kelib chiqishini ko'ramiz. Joylashtirish bepul; targ'ibot va tahlil bilan pullik tariflar — sotuvchi xohishiga ko'ra, sotuvdan foizsiz.",
+          "Profilda «Sotuvchi bo'lish»ni bosing, do'kon kartochkasini to'ldiring va mahsulotlarni yuklang. «Tekshirilgan do'kon» belgisi va «100% original» belgisini hujjatlar tekshirilgach qo'yamiz. Hozircha joylashtirish bepul.",
         ],
       },
       {

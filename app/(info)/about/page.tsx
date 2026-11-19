@@ -18,24 +18,24 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Как это работает',
         p: [
-          '- Магазины подключаются к платформе, проходят проверку и ведут свои витрины сами: товары, цены, доставка.',
+          '- Магазины подключаются к платформе и ведут свои витрины сами: товары, цены, доставка. Проверенные магазины отмечены значком.',
           '- Салоны красоты принимают онлайн-записи через платформу.',
-          '- Сообщество — сердце SEVIMLI: честные отзывы, вопросы и советы от реальных девушек. Понравился товар из отзыва — он покупается в один клик прямо из ленты.',
-          '- Карта лояльности действует у всех магазинов площадки: кешбэк до 5% с любой покупки.',
+          '- Сообщество — сердце SEVIMLI: отзывы, вопросы и советы девушек. Понравился товар из отзыва — он покупается в один клик прямо из ленты.',
+          '- Карта лояльности общая для всех магазинов площадки: баллы за каждый завершённый заказ.',
         ],
       },
       {
         h: 'Что делаем мы как площадка',
         p: [
-          '- Проверяем продавцов при подключении: документы, происхождение товара, для K-beauty — подтверждение официального импорта.',
-          '- Бережём честность отзывов: рейтинг нельзя купить, накрутки и заказные отзывы удаляем.',
+          '- Проверяем документы магазинов: после проверки магазин получает значок, а товары с подтверждённым происхождением — метку «100% оригинал».',
+          '- Рейтинг нельзя купить: отзывы и оценки на площадке не продаются.',
           '- Помогаем покупательнице и магазину договориться, если что-то пошло не так.',
         ],
       },
       {
         h: 'Где мы работаем',
         p: [
-          'Стартуем в Ташкенте. Условия доставки каждый магазин указывает сам — у большинства по Ташкенту она бесплатная. Самарканд, Бухара и другие города — на очереди.',
+          'Стартуем в Ташкенте. Условия доставки каждый магазин указывает сам.',
         ],
       },
     ],
@@ -53,24 +53,24 @@ const content: Record<string, { title: string; subtitle: string; sections: InfoS
       {
         h: 'Bu qanday ishlaydi',
         p: [
-          "- Do'konlar platformaga ulanadi, tekshiruvdan o'tadi va vitrinalarini o'zlari yuritadi: mahsulotlar, narxlar, yetkazib berish.",
+          "- Do'konlar platformaga ulanadi va vitrinalarini o'zlari yuritadi: mahsulotlar, narxlar, yetkazib berish. Tekshirilgan do'konlar belgi bilan ajratilgan.",
           "- Go'zallik salonlari platforma orqali onlayn yozilishlarni qabul qiladi.",
-          "- Hamjamiyat — SEVIMLIning yuragi: haqiqiy qizlarning samimiy sharhlari, savollari va maslahatlari. Sharhdagi mahsulot yoqdimi — lentadan bir bosishda sotib olinadi.",
-          "- Sodiqlik kartasi platformadagi barcha do'konlarda amal qiladi: har bir xariddan 5% gacha keshbek.",
+          "- Hamjamiyat — SEVIMLIning yuragi: qizlarning sharhlari, savollari va maslahatlari. Sharhdagi mahsulot yoqdimi — lentadan bir bosishda sotib olinadi.",
+          "- Sodiqlik kartasi platformadagi barcha do'konlar uchun umumiy: har bir yakunlangan buyurtma uchun ball.",
         ],
       },
       {
         h: 'Platforma sifatida biz nima qilamiz',
         p: [
-          "- Sotuvchilarni ulanishda tekshiramiz: hujjatlar, mahsulot kelib chiqishi, K-beauty uchun — rasmiy import tasdig'i.",
-          "- Sharhlar halolligini asraymiz: reytingni sotib olib bo'lmaydi, aldov va buyurtma sharhlarni o'chiramiz.",
+          "- Do'konlar hujjatlarini tekshiramiz: tekshiruvdan so'ng do'kon belgi oladi, kelib chiqishi tasdiqlangan mahsulotlar esa — «100% original» belgisini.",
+          "- Reytingni sotib olib bo'lmaydi: platformada sharh va baholar sotilmaydi.",
           "- Biror narsa noto'g'ri ketsa, xaridor va do'konga kelishishga yordam beramiz.",
         ],
       },
       {
         h: 'Qayerda ishlaymiz',
         p: [
-          "Toshkentdan boshlaymiz. Yetkazib berish shartlarini har bir do'kon o'zi belgilaydi — ko'pchiligida Toshkent bo'ylab bepul. Samarqand, Buxoro va boshqa shaharlar — navbatda.",
+          "Toshkentdan boshlaymiz. Yetkazib berish shartlarini har bir do'kon o'zi belgilaydi.",
         ],
       },
     ],

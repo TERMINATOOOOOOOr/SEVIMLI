@@ -240,8 +240,8 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'delivery',
     words: /доставк|привез|когда получ|сколько.*(идёт|идет|дней|ждать)|yetkaz|dostavka/i,
     answer: {
-      ru: '🚚 Доставка: её выполняет магазин — своим курьером или через службу доставки. Стоимость и срок указывает магазин; у многих бесплатно от 200 000 сум. Точные условия видно при оформлении заказа.',
-      uz: '🚚 Yetkazish: uni doʻkon bajaradi — oʻz kuryeri yoki yetkazib berish xizmati orqali. Narx va muddatni doʻkon belgilaydi; koʻpchilikda 200 000 soʻmdan bepul. Aniq shartlar buyurtma rasmiylashtirishda koʻrinadi.',
+      ru: '🚚 Доставка: её выполняет магазин — своим курьером или через службу доставки. Стоимость и срок указывает магазин — точные условия видно при оформлении заказа.',
+      uz: '🚚 Yetkazish: uni doʻkon bajaradi — oʻz kuryeri yoki yetkazib berish xizmati orqali. Narx va muddatni doʻkon belgilaydi — aniq shartlar buyurtma rasmiylashtirishda koʻrinadi.',
     },
   },
   {
@@ -264,16 +264,16 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'loyalty',
     words: /балл|кешб[эе]к|кешбек|лояльн|бонус|уровн|cashback|sodiqlik/i,
     answer: {
-      ru: '💎 Лояльность: копите баллы с каждой завершённой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. Кешбэк баллами растёт с 1% до 5%; баллами можно оплатить до 20% заказа, действуют 6 месяцев.',
-      uz: '💎 Sodiqlik: har yakunlangan xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Keshbek 1% dan 5% gacha; ballar bilan buyurtmaning 20% gacha toʻlash mumkin, ballar 6 oy amal qiladi.',
+      ru: '💎 Лояльность: копите баллы с каждой завершённой покупки и открываете уровни — Bronze, Silver, Gold, Platinum. 1 балл за каждые 1 000 сум, а уровень добавляет бонус к баллам — от +1% до +5%. Списание баллов пока не подключено.',
+      uz: '💎 Sodiqlik: har yakunlangan xariddan ball toʻplab, darajalarni ochasiz — Bronze, Silver, Gold, Platinum. Har 1 000 soʻm uchun 1 ball, daraja esa ballarga +1% dan +5% gacha bonus qoʻshadi. Ballarni sarflash hozircha ulanmagan.',
     },
   },
   {
     id: 'pay',
     words: /оплат|оплачив|картой|click|payme|uzcard|humo|наличн|to.?lov/i,
     answer: {
-      ru: '💳 Оплата: заказ оплачивается магазину — при получении или по его ссылке Click/Payme; онлайн-оплата картой на площадке подключается. Баллами лояльности — до 20% заказа.',
-      uz: '💳 Toʻlov: buyurtma doʻkonga toʻlanadi — qabul qilishda yoki uning Click/Payme havolasi orqali; platformada onlayn toʻlov ulanmoqda. Sodiqlik ballari bilan — buyurtmaning 20% gacha.',
+      ru: '💳 Оплата: заказ оплачивается магазину — при получении или онлайн через Payme/Click, если магазин подключил оплату. Способ видно при оформлении заказа.',
+      uz: '💳 Toʻlov: buyurtma doʻkonga toʻlanadi — qabul qilishda yoki, agar doʻkon ulagan boʻlsa, Payme/Click orqali onlayn. Usul buyurtma rasmiylashtirishda koʻrinadi.',
     },
   },
   {
@@ -296,32 +296,32 @@ const FAQ_INTENTS: { id: string; words: RegExp; answer: Record<Lang, string> }[]
     id: 'kbeauty',
     words: /k-?beauty|корейск|корея|koreys|koreya/i,
     answer: {
-      ru: '🇰🇷 K-beauty: магазины с официальным импортом из Кореи — тот же оригинал, что в бутиках, но дешевле, потому что продавцы конкурируют прямо на площадке.',
-      uz: '🇰🇷 K-beauty: Koreyadan rasmiy import qiluvchi doʻkonlar — butiklardagidek original, lekin arzonroq, chunki sotuvchilar platformada raqobatlashadi.',
+      ru: '🇰🇷 K-beauty: корейская косметика от разных магазинов на одной площадке. Метку «100% оригинал» получают товары магазинов, подтвердивших происхождение документами; срок годности указан в карточке.',
+      uz: '🇰🇷 K-beauty: turli doʻkonlarning koreys kosmetikasi bitta platformada. «100% original» belgisini kelib chiqishini hujjatlar bilan tasdiqlagan doʻkonlar mahsulotlari oladi; yaroqlilik muddati kartochkada.',
     },
   },
   {
     id: 'salon',
     words: /салон|запис|маникюр|массаж|бров|макияж|укладк|salon|massaj|manikyur/i,
     answer: {
-      ru: '💆 Салоны: в разделе «Салоны» выбираете услугу (маникюр, макияж, массаж, укладка) у проверенного салона и записываетесь онлайн — как обычный товар, через корзину.',
-      uz: '💆 Salonlar: «Salonlar» boʻlimida ishonchli salondan xizmat (manikyur, makiyaj, massaj) tanlab, onlayn yozilasiz — oddiy mahsulotdek savat orqali.',
+      ru: '💆 Салоны: в разделе «Салоны» выбираете услугу (маникюр, макияж, массаж, укладка) у салона и записываетесь онлайн — как обычный товар, через корзину.',
+      uz: '💆 Salonlar: «Salonlar» boʻlimida salondan xizmat (manikyur, makiyaj, massaj) tanlab, onlayn yozilasiz — oddiy mahsulotdek savat orqali.',
     },
   },
   {
     id: 'trust',
     words: /проверенн|надёжн|надежн|безопас|можно.*доверя|обман|ishonch|xavfsiz/i,
     answer: {
-      ru: '✅ Доверие: на площадке только проверенные магазины, метку «оригинал» дают после подтверждения официального импорта документами. В основе — честные отзывы реальных девушек, а не реклама.',
-      uz: '✅ Ishonch: platformada faqat tekshirilgan doʻkonlar, «original» belgisi hujjatlar bilan tasdiqlangach beriladi. Asosida — reklama emas, haqiqiy sharhlar.',
+      ru: '✅ Доверие: проверенные магазины отмечены значком, метку «100% оригинал» администратор включает после проверки документов магазина. В карточке виден срок годности — сверьте его с упаковкой при получении.',
+      uz: '✅ Ishonch: tekshirilgan doʻkonlar belgi bilan ajratilgan, «100% original» belgisini administrator doʻkon hujjatlari tekshirilgach yoqadi. Kartochkada yaroqlilik muddati koʻrinadi — qabul qilishda uni qadoq bilan solishtiring.',
     },
   },
   {
     id: 'about',
     words: /что\s+так(ое|ой)\s+sevimli|что\s+за\s+sevimli|кто\s+ты|что\s+(ты\s+)?умеешь|чем\s+помож|sevimli\s+nima|nima\s+qila/i,
     answer: {
-      ru: '💗 Я Севиля — помощница SEVIMLI. SEVIMLI это «всё в одном» для женщин Узбекистана: проверенные магазины и оригинальная косметика, живое сообщество с отзывами, групповые покупки Davra, запись в салоны и лояльность. Помогаю подобрать уход и отвечаю на вопросы о площадке.',
-      uz: '💗 Men Sevilyaman — SEVIMLI yordamchisi. SEVIMLI — ayollar uchun «hammasi birda»: tekshirilgan doʻkonlar va original kosmetika, sharhli hamjamiyat, Davra xaridlari, salonlarga yozilish va sodiqlik. Parvarish tanlashda yordam beraman.',
+      ru: '💗 Я Севиля — помощница SEVIMLI. SEVIMLI это «всё в одном» для женщин Узбекистана: магазины косметики и одежды, живое сообщество с отзывами, групповые покупки Davra, запись в салоны и лояльность. Помогаю подобрать уход и отвечаю на вопросы о площадке.',
+      uz: '💗 Men Sevilyaman — SEVIMLI yordamchisi. SEVIMLI — ayollar uchun «hammasi birda»: kosmetika va kiyim doʻkonlari, sharhli hamjamiyat, Davra xaridlari, salonlarga yozilish va sodiqlik. Parvarish tanlashda yordam beraman.',
     },
   },
 ]

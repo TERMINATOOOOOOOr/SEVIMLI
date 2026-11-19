@@ -27,7 +27,7 @@ export default function ShopForm({ userId, shop }: { userId: string; shop: Shop 
   // Доставка: тариф магазина, порог бесплатной доставки, срок, самовывоз
   const [deliveryFee, setDeliveryFee] = useState(String(shop?.delivery_fee ?? 15000))
   const [freeFrom, setFreeFrom] = useState(String(shop?.free_delivery_from ?? 200000))
-  const [deliveryDays, setDeliveryDays] = useState(shop?.delivery_days_text ?? 'По Ташкенту — 1–2 дня')
+  const [deliveryDays, setDeliveryDays] = useState(shop?.delivery_days_text ?? '')
   const [pickupEnabled, setPickupEnabled] = useState(Boolean(shop?.pickup_enabled))
   const [pickupAddress, setPickupAddress] = useState(shop?.pickup_address ?? '')
   const [davraEnabled, setDavraEnabled] = useState(Boolean(shop?.davra_enabled))
@@ -192,7 +192,7 @@ export default function ShopForm({ userId, shop }: { userId: string; shop: Shop 
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-700">Срок доставки</label>
-            <input value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} className="input" />
+            <input value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} className="input" placeholder="Например: по Ташкенту — 1–2 дня" />
           </div>
           <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-700">
             <input

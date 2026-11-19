@@ -10,7 +10,7 @@ import WeightlessBg from '@/components/ui/Weightless'
 export const metadata: Metadata = {
   title: 'Сообщество',
   description:
-    'Живое сообщество SEVIMLI: реальные отзывы, вопросы и советы о косметике, одежде и салонах. Спроси — и сразу купи проверенное.',
+    'Живое сообщество SEVIMLI: отзывы, вопросы и советы о косметике, одежде и салонах. Спроси — и сразу купи.',
 }
 
 export const dynamic = 'force-dynamic'
