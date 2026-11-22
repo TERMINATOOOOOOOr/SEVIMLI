@@ -644,7 +644,7 @@ export default function AssistantChat({ products, viewer = null, initialChats = 
                 type="button"
                 onClick={() => setSidebarOpen(false)}
                 className="rounded p-1 text-neutral-400 hover:text-neutral-700"
-                aria-label="Закрыть"
+                aria-label={t.composer.close}
               >
                 <X size={16} />
               </button>

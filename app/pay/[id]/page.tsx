@@ -32,7 +32,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
   }
 
   const paid = order.payment_status === 'paid'
-  const links = paid ? [] : payLinksFor(order, order.shop, { lang, origin: SITE_URL })
+  const links = paid ? [] : payLinksFor(order, order.shop, { lang: lang === 'uz' ? 'uz' : 'ru', origin: SITE_URL })
 
   return (
     <div className="mx-auto max-w-lg px-4 py-14 sm:px-6">

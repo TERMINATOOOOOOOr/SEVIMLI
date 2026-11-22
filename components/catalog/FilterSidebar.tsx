@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils'
 
 /** Значения городов совпадают с demo-данными (по-русски), подписи локализуются. */
 const CITIES = [
-  { value: 'Ташкент', uz: 'Toshkent' },
-  { value: 'Самарканд', uz: 'Samarqand' },
-  { value: 'Бухара', uz: 'Buxoro' },
+  { value: 'Ташкент', uz: 'Toshkent', en: 'Tashkent' },
+  { value: 'Самарканд', uz: 'Samarqand', en: 'Samarkand' },
+  { value: 'Бухара', uz: 'Buxoro', en: 'Bukhara' },
 ]
 
 export default function FilterSidebar() {
@@ -103,7 +103,7 @@ export default function FilterSidebar() {
             <option value="">{t.catalog.allCities}</option>
             {CITIES.map((c) => (
               <option key={c.value} value={c.value}>
-                {lang === 'uz' ? c.uz : c.value}
+                {lang === 'uz' ? c.uz : lang === 'en' ? c.en : c.value}
               </option>
             ))}
           </select>

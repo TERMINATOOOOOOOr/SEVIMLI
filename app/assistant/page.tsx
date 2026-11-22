@@ -6,7 +6,10 @@ import AssistantChat from '@/components/assistant/AssistantChat'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 
-export const metadata: Metadata = { title: 'Севиля — подбор ухода · Sevilya' }
+export async function generateMetadata(): Promise<Metadata> {
+  const { lang } = await getT()
+  return { title: lang === 'en' ? 'Sevilya — skincare assistant' : 'Севиля — подбор ухода · Sevilya' }
+}
 export const dynamic = 'force-dynamic'
 
 export default async function AssistantPage() {

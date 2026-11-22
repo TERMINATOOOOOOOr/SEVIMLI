@@ -65,7 +65,14 @@ export default function ProductForm({ shopId, initial, onClose, onSaved, origina
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    if (!user) throw new Error(lang === 'uz' ? 'Sessiya tugadi — qaytadan kiring' : 'Сессия истекла — войдите заново')
+    if (!user) {
+      const message = lang === 'uz'
+        ? 'Sessiya tugadi — qaytadan kiring'
+        : lang === 'en'
+          ? 'Your session expired — please sign in again'
+          : 'Сессия истекла — войдите заново'
+      throw new Error(message)
+    }
     for (const file of files) {
       // Имя файла не доверяем (кириллица/пробелы ломают ключ) — берём только безопасное расширение
       const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg'

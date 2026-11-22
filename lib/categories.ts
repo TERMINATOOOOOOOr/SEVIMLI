@@ -1,5 +1,6 @@
-/** Иконки и названия категорий (для плейсхолдеров и подписей на клиенте). */
+import type { Lang } from '@/lib/i18n'
 
+/** Иконки и названия категорий (для плейсхолдеров и подписей на клиенте). */
 export const CATEGORY_EMOJI: Record<string, string> = {
   clothes: '👗',
   beauty: '💄',
@@ -33,10 +34,21 @@ export const CATEGORY_LABEL_UZ: Record<string, string> = {
   grocery: 'Oziq-ovqat',
 }
 
+export const CATEGORY_LABEL_EN: Record<string, string> = {
+  clothes: 'Clothing and shoes',
+  beauty: 'Beauty and skincare',
+  lingerie: 'Lingerie',
+  salons: 'Salons and massage',
+  kids: 'Kids',
+  home: 'Home',
+  pharmacy: 'Health and wellness',
+  grocery: 'Groceries',
+}
+
 /** Подпись категории на нужном языке. */
-export function categoryLabel(slug: string | null | undefined, lang: 'ru' | 'uz'): string {
-  if (!slug) return lang === 'uz' ? "Do'kon" : 'Магазин'
-  const map = lang === 'uz' ? CATEGORY_LABEL_UZ : CATEGORY_LABEL
+export function categoryLabel(slug: string | null | undefined, lang: Lang): string {
+  if (!slug) return lang === 'uz' ? "Do'kon" : lang === 'en' ? 'Shop' : 'Магазин'
+  const map = lang === 'uz' ? CATEGORY_LABEL_UZ : lang === 'en' ? CATEGORY_LABEL_EN : CATEGORY_LABEL
   return map[slug] ?? slug
 }
 

@@ -61,6 +61,123 @@ const PRODUCT_UZ: Record<string, { name?: string; desc?: string }> = {
   p44: { name: 'Mavsumiy anor, 1 kg', desc: 'Quvadan shirin anorlar. Saralangan mevalar, sharbati — yoqut.' },
 }
 
+const PRODUCT_EN: Record<string, { name?: string; desc?: string }> = {
+  p1: { name: '“Aurora” midi dress', desc: 'Lightweight viscose, relaxed fit and midi length. Perfect for summer.' },
+  p2: { name: '“Milano” two-piece suit', desc: 'Blazer and trousers in soft blush suiting fabric.' },
+  p3: { name: '“Bella” leather bag', desc: 'Genuine leather with an adjustable strap.' },
+  p4: { name: 'Vitamin C serum', desc: 'Brightening facial serum, 30 ml.' },
+  p5: { name: '“Nude 12” eyeshadow palette', desc: '12 matte and shimmer shades.' },
+  p6: { name: 'Makeup brush set', desc: '10 professional brushes in a case.' },
+  p7: { name: '“Roza” lingerie set', desc: 'Lace set, sizes S–XL.' },
+  p8: { name: 'Silk-look pajamas', desc: 'Lounge set made from soft satin.' },
+  p9: { name: 'Newborn romper', desc: 'Soft cotton, sizes 0–6 months.' },
+  p10: { name: 'Activity play mat', desc: 'Play mat with arches and toys.' },
+  p11: { name: '“Cozy” knitted blanket', desc: 'Warm acrylic blanket, 150×200 cm.' },
+  p12: { name: 'Scented candle set', desc: 'Three candles: vanilla, lavender and sandalwood.' },
+  p13: { name: 'Relaxing massage, 60 min', desc: 'Full-body massage session. Book through the salon.' },
+  p14: { name: 'Manicure with gel polish', desc: 'Complete nail care and gel polish.' },
+  k1: { desc: 'Essence with 96% snail mucin for hydration, skin support and radiance. 100 ml.' },
+  k2: { desc: 'Light sunscreen with rice and probiotics. No white cast. 50 ml.' },
+  k3: { desc: 'Soothing toner with 77% heartleaf extract for sensitive skin. 250 ml.' },
+  k4: { desc: 'Exfoliating toner with acids and tea tree. 150 ml.' },
+  k5: { desc: 'Serum with 5D hyaluronic acid for deep hydration. 50 ml.' },
+  k6: { desc: 'Gentle exfoliating toner pads to help refine the look of pores. 70 pads.' },
+  k7: { desc: 'Serum with niacinamide and botanical extracts for a more even-looking tone. 50 ml.' },
+  k8: { desc: 'Hydrating toner with Dokdo deep-sea water and panthenol. 200 ml.' },
+  p15: { name: '“Ivory” silk-look blouse', desc: 'Flowy blouse with a relaxed fit. Sizes S–XL.' },
+  p16: { name: '“Nilufar” pleated midi skirt', desc: 'Lightweight pleated midi skirt with an elastic waist.' },
+  p17: { name: '“Grace” pumps', desc: 'Classic pumps with a 7 cm heel. Sizes 35–40.' },
+  p18: { name: '“Street” white sneakers', desc: 'Everyday white sneakers. Sizes 35–41.' },
+  p19: { name: '“Tashkent” autumn coat', desc: 'Straight-cut wool blend coat with a belt, in camel.' },
+  p20: { name: '“Atlas” silk scarf', desc: 'Natural silk scarf with a traditional pattern, 90×90 cm.' },
+  p21: { name: 'Volume Pro mascara', desc: 'Volumizing mascara with up to 12-hour wear.' },
+  p22: { name: 'Shea butter hand cream', desc: 'Nourishing hand cream, 75 ml. Absorbs without a sticky feel.' },
+  p23: { name: '“Oud Rose” perfume, 50 ml', desc: 'An oriental blend of rose, oud and vanilla. 8+ hour wear.' },
+  p24: { name: 'Sheet mask set, 10 pcs', desc: 'Hydrating sheet masks with aloe and hyaluronic acid.' },
+  p25: { name: '“Zaytun” satin romper', desc: 'Olive satin lounge romper with a belt. Sizes S–XL.' },
+  p26: { name: '“Tinch” linen pajamas', desc: 'Breathable linen and a relaxed fit for warm nights. Sizes S–XL.' },
+  p27: { name: 'Evening makeup', desc: 'Full evening look: complexion, eyes and lips. 60–90 min.' },
+  p28: { name: 'Hair styling and care', desc: 'Wash, conditioning mask and styling for any hair length. 45–60 min.' },
+  p29: { name: 'Wooden building blocks, 60 pcs', desc: 'Eco-friendly wooden blocks to help develop motor skills. Ages 18 months+.' },
+  p30: { name: 'Girls’ party dress', desc: 'Festive dress with a tulle skirt. Heights 92–128 cm.' },
+  p31: { name: 'Kids’ plush blanket', desc: 'Soft 100×120 cm blanket. Machine washable and non-static.' },
+  p32: { name: '“Bunny” plush toy', desc: '35 cm plush bunny with hypoallergenic filling.' },
+  p33: { name: '“Oq gul” ceramic vase', desc: 'Handmade matte ceramic, 25 cm tall.' },
+  p34: { name: 'Euro satin bedding set', desc: 'Premium satin, four pieces. Fade- and wrinkle-resistant.' },
+  p35: { name: '“Samarkand” rug, 160×230 cm', desc: 'Oriental pattern with a low pile for easy cleaning.' },
+  p36: { name: 'Ceramic dinnerware set, 12 pcs', desc: 'Service for four: plates, salad bowls and mugs.' },
+  p37: { name: 'Omega-3 1000 mg, 60 capsules', desc: 'High-purity fish oil. 60 capsules.' },
+  p38: { name: 'Hair and nail vitamins, 30 tablets', desc: 'Biotin, zinc and selenium for a one-month course.' },
+  p39: { name: 'Pharmacy cream for sensitive skin', desc: 'Fragrance-free dermocosmetic cream to support the skin barrier. 50 ml.' },
+  p40: { name: 'Vitamin D3 2000 IU, 90 capsules', desc: '90 capsules. Take one per day as directed on the package.' },
+  p41: { name: 'Mountain honey, 0.5 kg', desc: 'Natural mountain honey from this year’s harvest, with no added sugar.' },
+  p42: { name: 'Pink tomatoes, 1 kg', desc: 'Seasonal tomatoes from farms in Tashkent region.' },
+  p43: { name: 'Uzbek green tea No. 95, 200 g', desc: 'Classic Uzbek loose-leaf green tea.' },
+  p44: { name: 'Seasonal pomegranates, 1 kg', desc: 'Sweet pomegranates from Quva, hand selected.' },
+}
+
+const PRODUCT_EN_BY_NAME: Record<string, { name: string; desc?: string }> = {
+  'Сыворотка с витамином C': { name: 'Vitamin C serum', desc: 'Brightening facial serum, 30 ml.' },
+  'Палетка теней «Nude 12»': { name: '“Nude 12” eyeshadow palette', desc: '12 matte and shimmer shades.' },
+  'Комплект белья «Роза»': { name: '“Roza” lace lingerie set', desc: 'Lace set, sizes S–XL.' },
+  'Комбинезон для новорождённых': { name: 'Newborn romper', desc: 'Soft cotton, sizes 0–6 months.' },
+  'Набор свечей ароматических': { name: 'Scented candle set', desc: 'Three candles: vanilla, lavender and sandalwood.' },
+  'Набор кистей для макияжа': { name: 'Makeup brush set', desc: '10 professional brushes in a case.' },
+  'Маникюр + покрытие гель-лак': { name: 'Manicure with gel polish', desc: 'Complete nail care and gel polish.' },
+  'Блузка шёлковая «Ivory»': { name: '“Ivory” silk-look blouse', desc: 'Flowy blouse with a relaxed fit. Sizes S–XL.' },
+  'Платье миди «Aurora»': { name: '“Aurora” midi dress', desc: 'Lightweight viscose, relaxed fit and midi length. Perfect for summer.' },
+  'Пижама льняная «Tinch»': { name: '“Tinch” linen pajamas', desc: 'Breathable linen and a relaxed fit for warm nights. Sizes S–XL.' },
+  'Успокаивающий тонер с экстрактом хауттюйнии 77%': {
+    name: 'Anua Heartleaf 77% Soothing Toner',
+    desc: 'Soothing toner with 77% heartleaf extract for sensitive skin. 250 ml.',
+  },
+  'Парфюм «Oud Rose» 50 мл': {
+    name: '“Oud Rose” perfume, 50 ml',
+    desc: 'An oriental blend of rose, oud and vanilla. 8+ hour wear.',
+  },
+  'Мёд горный, 0,5 кг': {
+    name: 'Mountain honey, 0.5 kg',
+    desc: 'Natural mountain honey from this year’s harvest, with no added sugar.',
+  },
+  'Развивающий коврик': { name: 'Activity play mat', desc: 'Play mat with arches and toys.' },
+  'Плед вязаный «Cozy»': {
+    name: '“Cozy” knitted blanket',
+    desc: 'Warm acrylic blanket, 150×200 cm.',
+  },
+  'COSRX Advanced Snail 96 Mucin Power Essence': {
+    name: 'COSRX Advanced Snail 96 Mucin Power Essence',
+    desc: 'Essence with 96% snail mucin for hydration, skin support and radiance. 100 ml.',
+  },
+  'Beauty of Joseon Relief Sun SPF50+ PA++++': {
+    name: 'Beauty of Joseon Relief Sun SPF50+ PA++++',
+    desc: 'Light sunscreen with rice and probiotics. No white cast. 50 ml.',
+  },
+  'Anua Heartleaf 77% Soothing Toner': {
+    name: 'Anua Heartleaf 77% Soothing Toner',
+    desc: 'Soothing toner with 77% heartleaf extract for sensitive skin. 250 ml.',
+  },
+  'SOME BY MI AHA-BHA-PHA 30 Days Miracle Toner': {
+    name: 'SOME BY MI AHA-BHA-PHA 30 Days Miracle Toner',
+    desc: 'Exfoliating toner with acids and tea tree. 150 ml.',
+  },
+  'Torriden DIVE-IN Low Molecular Hyaluronic Serum': {
+    name: 'Torriden DIVE-IN Low Molecular Hyaluronic Serum',
+    desc: 'Serum with 5D hyaluronic acid for deep hydration. 50 ml.',
+  },
+  'medicube Zero Pore Pad 2.0': {
+    name: 'medicube Zero Pore Pad 2.0',
+    desc: 'Gentle exfoliating toner pads to help refine the look of pores. 70 pads.',
+  },
+  'numbuzin No.3 Skin Softening Serum': {
+    name: 'numbuzin No.3 Skin Softening Serum',
+    desc: 'Serum with niacinamide and botanical extracts for a more even-looking tone. 50 ml.',
+  },
+  'ROUND LAB 1025 Dokdo Toner': {
+    name: 'ROUND LAB 1025 Dokdo Toner',
+    desc: 'Hydrating toner with Dokdo deep-sea water and panthenol. 200 ml.',
+  },
+}
+
 const SHOP_UZ: Record<string, string> = {
   s1: "Istanbuldan ayollar kiyimi va aksessuarlari. Har hafta yangi kolleksiyalar.",
   s2: 'Original koreys va Yevropa kosmetikasi.',
@@ -73,17 +190,31 @@ const SHOP_UZ: Record<string, string> = {
   s9: "Bozordagidek fermer mahsulotlari: asal, yong'oqlar, mavsumiy mevalar. Buyurtma kuni yetkazib berish.",
 }
 
+const SHOP_EN: Record<string, string> = {
+  s1: 'Women’s clothing and accessories from Istanbul. New collections every week.',
+  s2: 'Authentic Korean and European beauty products.',
+  s3: 'Lingerie and loungewear for women.',
+  s4: 'Beauty salon offering manicures, brows, makeup and massage. Book online.',
+  s5: 'Everything for little ones: clothing, toys and strollers.',
+  s6: 'Home decor and textiles for a cozy space.',
+  s7: 'Korean beauty imports with product origin confirmed by documents (demo shop).',
+  s8: 'Licensed pharmacy offering vitamins, dermocosmetics and wellness products. Ask a pharmacist in chat.',
+  s9: 'Market-style farm goods: honey, nuts and seasonal fruit. Same-day delivery.',
+}
+
 /** Название товара на текущем языке. */
 export function productName(p: { id: string; name: string }, lang: Lang): string {
+  if (lang === 'en') return PRODUCT_EN[p.id]?.name ?? PRODUCT_EN_BY_NAME[p.name]?.name ?? p.name
   return lang === 'uz' ? (PRODUCT_UZ[p.id]?.name ?? p.name) : p.name
 }
 
 /** Описание товара на текущем языке. */
 export function productDesc(
-  p: { id: string; description?: string | null },
+  p: { id: string; name?: string; description?: string | null },
   lang: Lang,
 ): string | null {
   const base = p.description ?? null
+  if (lang === 'en') return PRODUCT_EN[p.id]?.desc ?? PRODUCT_EN_BY_NAME[p.name ?? '']?.desc ?? base
   return lang === 'uz' ? (PRODUCT_UZ[p.id]?.desc ?? base) : base
 }
 
@@ -96,25 +227,32 @@ const CITY_UZ: Record<string, string> = {
 
 /** Название города на текущем языке. */
 export function cityName(city: string, lang: Lang): string {
+  if (lang === 'en') {
+    const cityEn: Record<string, string> = {
+      Ташкент: 'Tashkent', Самарканд: 'Samarkand', Бухара: 'Bukhara', Наманган: 'Namangan',
+    }
+    return cityEn[city] ?? city
+  }
   return lang === 'uz' ? (CITY_UZ[city] ?? city) : city
 }
 
 /** Страны производства: значение хранится по-русски (так `/korean` находит «Корея»). */
-export const COUNTRIES: { value: string; uz: string }[] = [
-  { value: 'Корея', uz: 'Koreya' },
-  { value: 'Япония', uz: 'Yaponiya' },
-  { value: 'Китай', uz: 'Xitoy' },
-  { value: 'Турция', uz: 'Turkiya' },
-  { value: 'Россия', uz: 'Rossiya' },
-  { value: 'Узбекистан', uz: "O'zbekiston" },
-  { value: 'Франция', uz: 'Fransiya' },
-  { value: 'Италия', uz: 'Italiya' },
-  { value: 'Германия', uz: 'Germaniya' },
-  { value: 'США', uz: 'AQSh' },
+export const COUNTRIES: { value: string; uz: string; en: string }[] = [
+  { value: 'Корея', uz: 'Koreya', en: 'Korea' },
+  { value: 'Япония', uz: 'Yaponiya', en: 'Japan' },
+  { value: 'Китай', uz: 'Xitoy', en: 'China' },
+  { value: 'Турция', uz: 'Turkiya', en: 'Türkiye' },
+  { value: 'Россия', uz: 'Rossiya', en: 'Russia' },
+  { value: 'Узбекистан', uz: "O'zbekiston", en: 'Uzbekistan' },
+  { value: 'Франция', uz: 'Fransiya', en: 'France' },
+  { value: 'Италия', uz: 'Italiya', en: 'Italy' },
+  { value: 'Германия', uz: 'Germaniya', en: 'Germany' },
+  { value: 'США', uz: 'AQSh', en: 'USA' },
 ]
 
 /** Название страны на текущем языке. */
 export function countryName(country: string, lang: Lang): string {
+  if (lang === 'en') return COUNTRIES.find((c) => c.value === country)?.en ?? country
   if (lang !== 'uz') return country
   return COUNTRIES.find((c) => c.value === country)?.uz ?? country
 }
@@ -125,5 +263,6 @@ export function shopDesc(
   lang: Lang,
 ): string | null {
   const base = s.description ?? null
+  if (lang === 'en') return SHOP_EN[s.id] ?? base
   return lang === 'uz' ? (SHOP_UZ[s.id] ?? base) : base
 }
