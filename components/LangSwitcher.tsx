@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 const OPTIONS: { id: Lang; label: string }[] = [
   { id: 'ru', label: 'РУ' },
   { id: 'uz', label: "O'Z" },
+  { id: 'en', label: 'EN' },
 ]
 
 export default function LangSwitcher({ className }: { className?: string }) {

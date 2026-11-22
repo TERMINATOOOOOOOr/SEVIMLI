@@ -7,10 +7,19 @@ import CommunityFeed from '@/components/community/CommunityFeed'
 import SoftGlow from '@/components/ui/SoftGlow'
 import WeightlessBg from '@/components/ui/Weightless'
 
-export const metadata: Metadata = {
-  title: 'Сообщество',
-  description:
-    'Живое сообщество SEVIMLI: отзывы, вопросы и советы о косметике, одежде и салонах. Спроси — и сразу купи.',
+export async function generateMetadata(): Promise<Metadata> {
+  const { lang } = await getT()
+  return lang === 'en'
+    ? {
+        title: 'Community',
+        description:
+          'A SEVIMLI community for reviews, questions and advice about beauty, fashion and salons. Share your experience and shop recommended products.',
+      }
+    : {
+        title: 'Сообщество',
+        description:
+          'Живое сообщество SEVIMLI: отзывы, вопросы и советы о косметике, одежде и салонах. Спроси — и сразу купи.',
+      }
 }
 
 export const dynamic = 'force-dynamic'

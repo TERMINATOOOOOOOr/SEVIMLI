@@ -43,7 +43,7 @@ export default function CartDrawer() {
       >
         <header className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
           <h2 className="font-display text-xl font-bold">{t.cart.drawerTitle}</h2>
-          <button onClick={close} className="rounded-full p-2 hover:bg-neutral-100" aria-label="Закрыть">
+          <button onClick={close} className="rounded-full p-2 hover:bg-neutral-100" aria-label={t.composer.close}>
             <X size={22} />
           </button>
         </header>

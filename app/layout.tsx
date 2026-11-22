@@ -26,29 +26,37 @@ const playfair = Playfair_Display({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: 'SEVIMLI — экосистема для женщин Узбекистана',
-    template: '%s · SEVIMLI',
-  },
-  description:
-    'Маркетплейс и сообщество для женщин Узбекистана: магазины косметики и одежды, салоны с онлайн-записью, отзывы и карта лояльности. Спроси у своих — купи проверенное.',
-  manifest: '/manifest.webmanifest',
-  appleWebApp: {
-    capable: true,
-    title: 'SEVIMLI',
-    statusBarStyle: 'default',
-  },
-  icons: {
-    icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-  },
-  openGraph: {
-    title: 'SEVIMLI',
-    description: 'Маркетплейс для женщин: магазины и живое сообщество. Спроси у своих — купи проверенное.',
-    type: 'website',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLang()
+  const title =
+    lang === 'en'
+      ? 'SEVIMLI — Social shopping for women in Uzbekistan'
+      : 'SEVIMLI — экосистема для женщин Узбекистана'
+  const description =
+    lang === 'en'
+      ? 'A marketplace and community for women in Uzbekistan: discover beauty, fashion and salons, share reviews, and shop with confidence.'
+      : 'Маркетплейс и сообщество для женщин Узбекистана: магазины косметики и одежды, салоны с онлайн-записью, отзывы и карта лояльности. Спроси у своих — купи проверенное.'
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: lang === 'en' ? '%s | SEVIMLI' : '%s · SEVIMLI' },
+    description,
+    manifest: '/manifest.webmanifest',
+    appleWebApp: {
+      capable: true,
+      title: 'SEVIMLI',
+      statusBarStyle: 'default',
+    },
+    icons: {
+      icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
+    openGraph: {
+      title: 'SEVIMLI',
+      description,
+      type: 'website',
+    },
+  }
 }
 
 export const viewport: Viewport = {

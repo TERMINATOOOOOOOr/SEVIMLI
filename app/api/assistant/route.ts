@@ -4,6 +4,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { isSupabaseConfigured } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 import { makeMarkerTransform, toModelCodes } from '@/lib/assistant-markers'
+import type { Lang } from '@/lib/i18n'
 
 /**
  * Живой ассистент «Севиля» на Claude. Ключ читается на сервере из ANTHROPIC_API_KEY
@@ -53,11 +54,13 @@ async function loadCatalog(): Promise<Catalog> {
   return { text: lines.join('\n'), codeToId, idToCode }
 }
 
-async function systemPrompt(lang: 'ru' | 'uz', catalog: string): Promise<string> {
+async function systemPrompt(lang: Lang, catalog: string): Promise<string> {
   const language =
     lang === 'uz'
       ? 'узбекском языке ЛАТИНИЦЕЙ (oʻzbek lotin yozuvi; кириллицу и русские слова не используй, описания товаров переводи своими словами, названия товаров оставляй как в каталоге)'
-      : 'русском языке'
+      : lang === 'en'
+        ? 'English (use English throughout; translate product descriptions, but keep product and brand names as listed)'
+        : 'русском языке'
   return `Ты — Севиля, дружелюбная ИИ-помощница маркетплейса SEVIMLI (площадка для женщин Узбекистана: магазины косметики и одежды, салоны, сообщество). Отвечай ТОЛЬКО на ${language}, тепло и по делу, коротко (2–5 предложений), с лёгкими эмодзи по месту. Никакой markdown-разметки: никаких **, заголовков и звёздочек.
 
 Что такое SEVIMLI (используй как факты):
@@ -70,7 +73,7 @@ async function systemPrompt(lang: 'ru' | 'uz', catalog: string): Promise<string>
 - Доставка: её выполняет магазин (свой курьер, служба доставки или самовывоз); стоимость и срок указывает магазин.
 - Оплата: магазину при получении или онлайн через Payme/Click, если магазин подключил оплату.
 - Возврат: через магазин по закону «О защите прав потребителей» — обмен товара надлежащего качества 10 дней; косметика, парфюмерия, бельё и предметы гигиены обмену не подлежат, кроме брака. Платформа — медиатор в спорах.
-- Языки: узбекский и русский.
+- Языки интерфейса: узбекский, русский и английский.
 
 Твоя работа:
 1) Подбирать уход по типу кожи и задаче, рекомендуя ТОЛЬКО товары из каталога ниже (не выдумывай товары и цены; цены в сумах).
@@ -151,7 +154,7 @@ export async function POST(req: Request): Promise<Response> {
   } catch {
     return new Response('bad_json', { status: 400 })
   }
-  const lang: 'ru' | 'uz' = body.lang === 'uz' ? 'uz' : 'ru'
+  const lang: Lang = body.lang === 'uz' || body.lang === 'en' ? body.lang : 'ru'
   const incoming = Array.isArray(body.messages) ? body.messages : []
   const messages = incoming
     .filter(

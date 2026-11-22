@@ -91,7 +91,7 @@ export function payLinksFor(order: Order, shop: Shop | null | undefined, opts: {
                 accountField: shop.payme_account_field ?? 'order_id',
                 orderId: order.id,
                 amount,
-                lang: opts.lang,
+                lang: opts.lang === 'uz' ? 'uz' : 'ru',
                 callback: back,
               }),
             },

@@ -6,10 +6,19 @@ import { getT } from '@/lib/lang-server'
 import ProductCard from '@/components/cards/ProductCard'
 import WeightlessBg from '@/components/ui/Weightless'
 
-export const metadata: Metadata = {
-  title: 'Корейская косметика — 100% оригинал',
-  description:
-    'Корейская косметика в Узбекистане: метка «100% оригинал» — только по документам магазина, срок годности в каждой карточке, отзывы сообщества.',
+export async function generateMetadata(): Promise<Metadata> {
+  const { lang } = await getT()
+  return lang === 'en'
+    ? {
+        title: 'Korean beauty — verified authenticity',
+        description:
+          'Shop Korean beauty in Uzbekistan. Authenticity badges are awarded only after document checks, and expiry dates are shown on product pages.',
+      }
+    : {
+        title: 'Корейская косметика — 100% оригинал',
+        description:
+          'Корейская косметика в Узбекистане: метка «100% оригинал» — только по документам магазина, срок годности в каждой карточке, отзывы сообщества.',
+      }
 }
 
 export default async function KoreanPage() {

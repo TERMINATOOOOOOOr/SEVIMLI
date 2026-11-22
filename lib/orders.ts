@@ -1,4 +1,5 @@
 import type { OrderStatus } from '@/lib/types'
+import type { Lang } from '@/lib/i18n'
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   pending: 'Ожидает подтверждения',
@@ -16,9 +17,18 @@ export const ORDER_STATUS_LABEL_UZ: Record<OrderStatus, string> = {
   cancelled: 'Bekor qilindi',
 }
 
+export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
+  pending: 'Awaiting confirmation',
+  confirmed: 'Confirmed',
+  delivering: 'Out for delivery',
+  done: 'Completed',
+  cancelled: 'Cancelled',
+}
+
 /** Статус заказа на нужном языке. */
-export function orderStatusLabel(status: OrderStatus, lang: 'ru' | 'uz'): string {
-  return (lang === 'uz' ? ORDER_STATUS_LABEL_UZ : ORDER_STATUS_LABEL)[status]
+export function orderStatusLabel(status: OrderStatus, lang: Lang): string {
+  const labels = lang === 'uz' ? ORDER_STATUS_LABEL_UZ : lang === 'en' ? ORDER_STATUS_LABEL_EN : ORDER_STATUS_LABEL
+  return labels[status]
 }
 
 export const ORDER_STATUS_STYLE: Record<OrderStatus, string> = {

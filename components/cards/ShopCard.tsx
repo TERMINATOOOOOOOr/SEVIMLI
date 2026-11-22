@@ -4,15 +4,10 @@ import Link from 'next/link'
 import { BadgeCheck, MapPin } from 'lucide-react'
 import type { Shop } from '@/lib/types'
 import { categoryEmoji, categoryLabel } from '@/lib/categories'
+import { cityName } from '@/lib/product-i18n'
 import { useLang } from '@/components/LangProvider'
 import StarRating from '@/components/ui/StarRating'
 import Thumb from '@/components/ui/Thumb'
-
-const CITY_UZ: Record<string, string> = {
-  Ташкент: 'Toshkent',
-  Самарканд: 'Samarqand',
-  Бухара: 'Buxoro',
-}
 
 export default function ShopCard({ shop }: { shop: Shop }) {
   const { lang } = useLang()
@@ -34,7 +29,7 @@ export default function ShopCard({ shop }: { shop: Shop }) {
           <StarRating value={shop.rating} count={shop.reviews_count} size={14} />
           <span className="flex items-center gap-1 text-xs text-neutral-500">
             <MapPin size={12} />
-            {lang === 'uz' ? (CITY_UZ[shop.city] ?? shop.city) : shop.city}
+            {cityName(shop.city, lang)}
           </span>
         </div>
       </div>

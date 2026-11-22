@@ -21,7 +21,13 @@ export default function AuthRequired({ demo = false }: { demo?: boolean }) {
     text: "Bu sahifani ko'rish uchun akkauntga kiring.",
     cta: "Kirish yoki ro'yxatdan o'tish",
   }
-  const s = lang === 'uz' ? uz : ru
+  const en = {
+    title: 'Sign-in required',
+    demoText: 'The app is running in demo mode. Connect Supabase (see DEPLOY.md) to enable sign-in.',
+    text: 'Sign in to view this page.',
+    cta: 'Sign in or create an account',
+  }
+  const s = lang === 'uz' ? uz : lang === 'en' ? en : ru
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center justify-center px-4 py-24 text-center">

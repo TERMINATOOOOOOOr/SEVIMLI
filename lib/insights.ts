@@ -82,9 +82,9 @@ export function getPriceHistory(product: Product, days = 90): PricePoint[] {
 
 export interface MarketOffer {
   /** Название источника. */
-  source: { ru: string; uz: string }
+  source: { ru: string; uz: string; en: string }
   /** Пояснение, как получена цифра. */
-  note: { ru: string; uz: string }
+  note: { ru: string; uz: string; en: string }
   price: number
   /** Дата последней проверки цены (ISO). */
   checked: string
@@ -104,10 +104,11 @@ export function getMarketComparison(product: Product): MarketOffer[] | null {
   const mp = product.market_price
   return [
     {
-      source: { ru: 'SEVIMLI · Seoul Beauty', uz: 'SEVIMLI · Seoul Beauty' },
+      source: { ru: 'SEVIMLI · Seoul Beauty', uz: 'SEVIMLI · Seoul Beauty', en: 'SEVIMLI · Seoul Beauty' },
       note: {
         ru: 'импорт, документы магазина',
         uz: "import, do'kon hujjatlari",
+        en: 'shop import documents',
       },
       price: product.price,
       checked: daysAgo(0),
@@ -117,28 +118,32 @@ export function getMarketComparison(product: Product): MarketOffer[] | null {
       source: {
         ru: 'Офлайн-ритейл Ташкента',
         uz: 'Toshkent oflayn-riteyli',
+        en: 'Tashkent offline retail',
       },
       note: {
         ru: 'среднее по 3 сетям косметики, ТЦ',
         uz: "3 kosmetika tarmog'i bo'yicha o'rtacha",
+        en: 'average across three beauty retailers',
       },
       price: round1000(mp * (1 + rnd() * 0.04)),
       checked: daysAgo(2 + Math.floor(rnd() * 3)),
     },
     {
-      source: { ru: 'Онлайн-маркетплейсы UZ', uz: 'UZ onlayn-marketpleyslar' },
+      source: { ru: 'Онлайн-маркетплейсы UZ', uz: 'UZ onlayn-marketpleyslar', en: 'Uzbekistan online marketplaces' },
       note: {
         ru: 'медианная цена листингов, без проверки документов',
         uz: 'listinglar mediana narxi, hujjatlar tekshiruvisiz',
+        en: 'median listing price; documents not verified',
       },
       price: round1000(mp * (0.9 + rnd() * 0.06)),
       checked: daysAgo(1 + Math.floor(rnd() * 3)),
     },
     {
-      source: { ru: 'Instagram-продавцы', uz: 'Instagram-sotuvchilar' },
+      source: { ru: 'Instagram-продавцы', uz: 'Instagram-sotuvchilar', en: 'Instagram sellers' },
       note: {
         ru: 'среднее по 5 популярным аккаунтам, происхождение неизвестно',
         uz: "5 mashhur akkaunt bo'yicha o'rtacha, kelib chiqishi noma'lum",
+        en: 'average across five popular accounts; origin unknown',
       },
       price: round1000(mp * (0.82 + rnd() * 0.08)),
       checked: daysAgo(3 + Math.floor(rnd() * 4)),

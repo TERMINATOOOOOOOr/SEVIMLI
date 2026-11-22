@@ -36,7 +36,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const product = await getProductById(id)
-  return { title: product?.name ?? 'Товар' }
+  const { lang } = await getT()
+  return { title: product ? productName(product, lang) : lang === 'en' ? 'Product' : 'Товар' }
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
